@@ -1,0 +1,13 @@
+stages:
+  - build
+  - test
+
+
+build-dev:
+  stage: build
+  only:
+    - master
+    - develop
+  script:
+    - docker build --pull -t hub.alterway.fr/sentinel:${CI_BUILD_REF_NAME} .
+    - docker push hub.alterway.fr/sentinel:${CI_BUILD_REF_NAME}
