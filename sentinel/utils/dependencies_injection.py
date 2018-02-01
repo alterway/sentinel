@@ -1,4 +1,4 @@
-from sentinel.di import DEPENDENCIES
+from di import DEPENDENCIES
 
 
 class InjectedParamNotExists(Exception):
