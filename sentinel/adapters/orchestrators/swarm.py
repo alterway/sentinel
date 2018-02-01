@@ -11,13 +11,18 @@ class SwarmAdapter(OrchestratorAdapter):
 
     def get_services(self):
         services = []
+
+        # If manager get swarm services
         if self._is_manager():
             swarm_services = self._get_swarm_services()
 
             for service in swarm_services:
-                service_object = self._get_service_object(service)
-                if service_object is not None:
-                    services.append(service_object)
+                services.extend(self._get_services_object(service))
+
+        # Get containers
+        containers = self._get_containers()
+        for container in containers:
+            services.extend(self._get_services_object_from_container(container))
 
         return services
 
@@ -25,10 +30,10 @@ class SwarmAdapter(OrchestratorAdapter):
         if event['Type'] == 'service' and self._is_manager():
             return self._get_service_object(self.client.services.get(event['Actor']['ID']))
 
-
     @inject_param('logger')
-    def _get_service_object(self, service, logger=None):
+    def _get_services_object(self, service, logger=None):
         exposed_ports = self._get_service_exposed_ports(service)
+        services = []
         if len(exposed_ports) == 0:
             logger.info('Ignored Service : %s don\'t publish port' % service.attrs['Spec']['Name'])
         else:
@@ -37,9 +42,41 @@ class SwarmAdapter(OrchestratorAdapter):
                 logger.info('Ignored Service: %s don\'t run in available host' % service.attrs['Spec']['Name'])
             else:
                 for port in exposed_ports:
-                    return Service(name="%s-%s" % (service.attrs['Spec']['Name'], port), nodes=nodes, tags=['swarm-service'], port=port)
+                    services.append(
+                        Service(
+                            name="%s-%s" % (service.attrs['Spec']['Name'], port),
+                            nodes=nodes,
+                            tags=['swarm-service'],
+                            port=port
+                        )
+                    )
 
-        return None
+        return services
+
+    @inject_param('logger')
+    def _get_services_object_from_container(self, container, logger=None):
+        exposed_ports = self._get_container_exposed_ports(container)
+        container_name = container.attrs['Config']['Labels']['com.docker.compose.service'] if 'com.docker.compose.service' in container.attrs['Config']['Labels'] else container.attrs['Name'].replace('/', '')
+        services = []
+        if len(exposed_ports) == 0:
+            logger.info('Ignored Service : %s don\'t publish port' % container_name)
+        else:
+            for port in exposed_ports:
+                services.append(
+                    Service(
+                        name="%s-%s" % (container_name, port),
+                        port=port,
+                        nodes=[
+                            Node(
+                                name=self.client.info()['Name'],
+                                address=self.client.info()['Swarm']['NodeAddr']
+                            )
+                        ],
+                        tags=['container']
+                    )
+                )
+
+        return services
 
     def _is_manager(self):
         return self.client.info()['Swarm']['ControlAvailable']
@@ -62,3 +99,19 @@ class SwarmAdapter(OrchestratorAdapter):
             port['PublishedPort']
             for port in swarm_service.attrs['Spec']['EndpointSpec']['Ports']
         ] if 'Ports' in swarm_service.attrs['Spec']['EndpointSpec'] else []
+
+
+    def _get_containers(self):
+        return [
+            container
+            for container in self.client.containers.list()
+            if container.status == 'running' and 'com.docker.swarm.service.id' not in container.attrs['Config']['Labels']
+        ]
+
+    def _get_container_exposed_ports(self, container):
+        ports = []
+        for key in container.attrs['HostConfig']['PortBindings'].keys():
+            if len(container.attrs['HostConfig']['PortBindings'][key][0]['HostPort']) != 0:
+                ports.append(int(container.attrs['HostConfig']['PortBindings'][key][0]['HostPort']))
+
+        return ports
