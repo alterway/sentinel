@@ -28,7 +28,11 @@ class SwarmAdapter(OrchestratorAdapter):
 
     def get_service(self, event):
         if event['Type'] == 'service' and self._is_manager():
-            return self._get_service_object(self.client.services.get(event['Actor']['ID']))
+            return self._get_services_object(self.client.services.get(event['Actor']['ID']))
+        elif event['Type'] == 'container':
+            return self._get_services_object_from_container(self.client.containers.get(event['Actor']['ID']))
+
+        return []
 
     @inject_param('logger')
     def _get_services_object(self, service, logger=None):
@@ -110,8 +114,8 @@ class SwarmAdapter(OrchestratorAdapter):
 
     def _get_container_exposed_ports(self, container):
         ports = []
-        for key in container.attrs['HostConfig']['PortBindings'].keys():
-            if len(container.attrs['HostConfig']['PortBindings'][key][0]['HostPort']) != 0:
-                ports.append(int(container.attrs['HostConfig']['PortBindings'][key][0]['HostPort']))
+        for key in container.attrs['NetworkSettings']['Ports'].keys():
+            if container.attrs['NetworkSettings']['Ports'][key] is not None and len(container.attrs['NetworkSettings']['Ports'][key][0]['HostPort']) != 0:
+                ports.append(int(container.attrs['NetworkSettings']['Ports'][key][0]['HostPort']))
 
         return ports

@@ -10,8 +10,8 @@ from datetime import datetime
 def process_event(event, backend_adapter=None, orchestrator_adapter=None, logger=None):
     if event['Action'] == 'create':
         logger.debug("Get event create : %s" % event)
-        service = orchestrator_adapter.get_service(event)
-        if service is not None:
+        services = orchestrator_adapter.get_service(event)
+        for service in services:
             backend_adapter.register_service(service)
 
 @inject_param('backend_adapter')
