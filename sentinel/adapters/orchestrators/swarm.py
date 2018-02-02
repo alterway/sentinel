@@ -34,9 +34,15 @@ class SwarmAdapter(OrchestratorAdapter):
 
         return []
 
-    def get_service_tag_to_remove(self, event):
+    @inject_param('logger')
+    def get_service_tag_to_remove(self, event, logger=None):
         if event['Type'] == 'service' and self._is_manager():
             return 'swarm-service:%s' % event['Actor']['ID']
+        elif event['Type'] == 'container' and 'com.docker.swarm.service.name' not in event['Actor']['Attributes']:
+            return 'container:%s' % event['Actor']['ID']
+        else:
+            logger.debug("No tag to remove")
+            return None
 
 
     @inject_param('logger')

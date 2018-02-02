@@ -14,9 +14,12 @@ def process_event(event, backend_adapter=None, orchestrator_adapter=None, logger
         services = orchestrator_adapter.get_service(event)
         for service in services:
             backend_adapter.register_service(service)
-    elif event['Action'] == 'remove':
+    elif event['Action'] == 'remove' or event['Action'] == 'kill':
         # Suppression du service
-        backend_adapter.remove_service_with_tag(orchestrator_adapter.get_service_tag_to_remove(event))
+        logger.debug("Get event remove : %s" % event)
+        tag_to_remove_on_backend = orchestrator_adapter.get_service_tag_to_remove(event)
+        if tag_to_remove_on_backend is not None:
+            backend_adapter.remove_service_with_tag(tag_to_remove_on_backend)
 
 
 
