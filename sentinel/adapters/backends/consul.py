@@ -33,20 +33,17 @@ class ConsulAdapter(BackendAdapter):
     def register_service(self, service, logger=None):
         for node in service.nodes:
             payload = {
-                'Node': node.name,
-                'Address': node.address,
-                'Service': {
-                    'Service': service.name,
-                    'Tags': service.tags,
-                    'Address': node.address,
-                    'Port': service.port
-                }
+                "ID": "%s-%s" % (service.name, node.name),
+                "Name": service.name,
+                "Tags": service.tags,
+                "Address": node.address,
+                "Port": service.port
             }
 
             logger.debug('Ask for register service %s : %s %s:%s' % (service.name, node.name, node.address, service.port))
-            response = requests.put('%s/v1/catalog/register' % self.address, data=json.dumps(payload))
+            response = requests.put('http://%s:8500/v1/agent/service/register' % node.address, data=json.dumps(payload))
 
-            if response.status_code == 200 and response.json():
+            if response.status_code == 200:
                 logger.info("Register Service : %s - %s %s:%s" % (service.name, node.name, node.address, service.port))
             else:
                 logger.error("Failed to register service %s for node %s : %s" % (service.name, node.name, response.content))
@@ -60,14 +57,9 @@ class ConsulAdapter(BackendAdapter):
             logger.debug("Process service %s to deregister on nodes : %s" % (service_to_remove[0].name, service_to_remove[0].nodes))
             for node in service_to_remove[0].nodes:
                 logger.debug("Process node %s to deregister service" % node.name)
-                payload = {
-                    'Node': node.name,
-                    'ServiceID': service_to_remove[0].name
-                }
+                response = requests.put('http://%s:8500/v1/agent/service/deregister/%s-%s' % (node.address, service_to_remove[0].name, node.name))
 
-                response = requests.put('%s/v1/catalog/deregister' % self.address, data=json.dumps(payload))
-
-                if response.status_code == 200 and response.json():
+                if response.status_code == 200:
                     logger.info('Deregister Service : %s - %s' % (service_to_remove[0].name, node.name))
                 else:
                     logger.error("Failed to deregister service %s for node %s : %s" % (service_to_remove[0].name, node.name, response.content))

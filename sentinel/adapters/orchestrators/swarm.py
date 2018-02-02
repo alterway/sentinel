@@ -26,15 +26,17 @@ class SwarmAdapter(OrchestratorAdapter):
                     self._process_node_up(attrs['name'], 'ready')
 
     @inject_param('backend_adapter')
+    @inject_param('logger')
     def _process_node_down(self, node_name, new_status, backend_adapter=None, logger=None):
-        logger.info('Swarm Node %s is %s, deregister this node in backend...' % node_name, new_status)
-        backend_adaptor.deregister_node(node_name)
+        logger.info('Swarm Node %s is %s, deregister this node in backend...' % (node_name, new_status))
+        backend_adapter.deregister_node(node_name)
 
     @inject_param('backend_adapter')
+    @inject_param('logger')
     def _process_node_up(self, node_name, new_status, backend_adapter=None, logger=None):
-        logger.info('Swarm Node %s is %s, process register services...' % node_name, new_status)
+        logger.info('Swarm Node %s is %s, process register services...' % (node_name, new_status))
         for service in self.get_services():
-            backend_adaptor.register_service(service)
+            backend_adapter.register_service(service)
 
     def get_services(self):
         services = []
