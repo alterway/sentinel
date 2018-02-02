@@ -15,7 +15,7 @@ class ConsulAdapter(BackendAdapter):
     def get_services(self, logger=None):
         response = requests.get('%s/v1/catalog/services' % self.address).json()
         services = [
-            Service(name=key, tags=response[key], port=0, nodes=[])
+            Service(name=key, tags=response[key], nodes=[])
             for key in response.keys()
         ]
 

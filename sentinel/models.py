@@ -1,8 +1,8 @@
 
 class Service(object):
-    def __init__(self, name, port, tags=[], nodes=[]):
+    def __init__(self, name, port=None, tags=[], nodes=[]):
         self.name = name
-        self.port = None
+        self.port = port
         self.tags = tags
         self.nodes = nodes
 
