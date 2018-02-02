@@ -53,22 +53,25 @@ class ConsulAdapter(BackendAdapter):
     @inject_param("logger")
     def remove_service_with_tag(self, tag, logger=None):
         services = self.get_services()
-        for service in services:
-            if tag in service.tags:
-                logger.debug("Process service %s to deregister on nodes : %s" % (service.name, service.nodes))
-                for node in service.nodes:
-                    logger.debug("Process node %s to deregister service" % node.name)
-                    payload = {
-                        'Node': node.name,
-                        'ServiceID': service.name
-                    }
+        service_to_remove = [service for service in services if tag in service.tags]
 
-                    response = requests.put('%s/v1/catalog/deregister' % self.address, data=json.dumps(payload))
+        if len(service_to_remove) != 0:
+            logger.debug("Process service %s to deregister on nodes : %s" % (service_to_remove[0].name, service_to_remove[0].nodes))
+            for node in service_to_remove[0].nodes:
+                logger.debug("Process node %s to deregister service" % node.name)
+                payload = {
+                    'Node': node.name,
+                    'ServiceID': service_to_remove[0].name
+                }
 
-                    if response.status_code == 200 and response.json():
-                        logger.info('Deregister Service : %s - %s' % (service.name, node.name))
-                    else:
-                        logger.error("Failed to deregister service %s for node %s : %s" % (service.name, node.name, response.content))
+                response = requests.put('%s/v1/catalog/deregister' % self.address, data=json.dumps(payload))
+
+                if response.status_code == 200 and response.json():
+                    logger.info('Deregister Service : %s - %s' % (service_to_remove[0].name, node.name))
+                else:
+                    logger.error("Failed to deregister service %s for node %s : %s" % (service_to_remove[0].name, node.name, response.content))
+        else:
+            logger.debug("Service with tag %s not found in consul" % tag)
 
 
 
