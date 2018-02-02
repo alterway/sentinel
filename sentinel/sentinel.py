@@ -9,10 +9,16 @@ from datetime import datetime
 @inject_param('logger')
 def process_event(event, backend_adapter=None, orchestrator_adapter=None, logger=None):
     if event['Action'] == 'create':
+        # Ajout du service créé
         logger.debug("Get event create : %s" % event)
         services = orchestrator_adapter.get_service(event)
         for service in services:
             backend_adapter.register_service(service)
+    elif event['Action'] == 'remove':
+        # Suppression du service
+        backend_adapter.remove_service_with_tag(orchestrator_adapter.get_service_tag_to_remove(event))
+
+
 
 @inject_param('backend_adapter')
 @inject_param('orchestrator_adapter')

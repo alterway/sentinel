@@ -34,6 +34,11 @@ class SwarmAdapter(OrchestratorAdapter):
 
         return []
 
+    def get_service_tag_to_remove(self, event):
+        if event['Type'] == 'service' and self._is_manager():
+            return 'swarm-service:%s' % event['Actor']['ID']
+
+
     @inject_param('logger')
     def _get_services_object(self, service, logger=None):
         exposed_ports = self._get_service_exposed_ports(service)
@@ -50,7 +55,7 @@ class SwarmAdapter(OrchestratorAdapter):
                         Service(
                             name="%s-%s" % (service.attrs['Spec']['Name'], port),
                             nodes=nodes,
-                            tags=['swarm-service'],
+                            tags=['swarm-service:%s' % service.id],
                             port=port
                         )
                     )
@@ -76,7 +81,7 @@ class SwarmAdapter(OrchestratorAdapter):
                                 address=self.client.info()['Swarm']['NodeAddr']
                             )
                         ],
-                        tags=['container']
+                        tags=['container:%s' % container.id]
                     )
                 )
 
