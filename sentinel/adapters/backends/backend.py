@@ -9,3 +9,6 @@ class BackendAdapter():
 
     def register_service(self):
         raise NotImplemented("The method register_service() is not implemented for this backend")
+
+    def deregister_node(self):
+        raise NotImplemented('Method deregister_node not implemented')

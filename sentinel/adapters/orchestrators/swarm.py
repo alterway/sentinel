@@ -9,6 +9,33 @@ class SwarmAdapter(OrchestratorAdapter):
     def __init__(self):
         self.client = docker.DockerClient(base_url='unix://var/run/docker.sock', version='auto')
 
+    @inject_param('backend_adapter')
+    @inject_param('logger')
+    def process_event(self, event, backend_adapter=None, logger=None):
+        if event['Type'] == 'node' and event['Action'] == 'update':
+            attrs = event['Actor']['Attributes']
+            if 'availability.new' in attrs:
+                if attrs['availability.new'] == 'drain':
+                    self._process_node_down(attrs['name'], 'drain')
+                elif attrs['availability.new'] == 'active':
+                    self._process_node_up(attrs['name'], 'active')
+            elif 'state.new' in attrs:
+                if attrs['state.new'] == 'down':
+                    self._process_node_down(attrs['name'], 'down')
+                elif attrs['state.new'] == 'ready':
+                    self._process_node_up(attrs['name'], 'ready')
+
+    @inject_param('backend_adapter')
+    def _process_node_down(self, node_name, new_status, backend_adapter=None, logger=None):
+        logger.info('Swarm Node %s is %s, deregister this node in backend...' % node_name, new_status)
+        backend_adaptor.deregister_node(node_name)
+
+    @inject_param('backend_adapter')
+    def _process_node_up(self, node_name, new_status, backend_adapter=None, logger=None):
+        logger.info('Swarm Node %s is %s, process register services...' % node_name, new_status)
+        for service in self.get_services():
+            backend_adaptor.register_service(service)
+
     def get_services(self):
         services = []
 
@@ -109,11 +136,16 @@ class SwarmAdapter(OrchestratorAdapter):
 
         return result
 
-    def _get_service_exposed_ports(self, swarm_service):
+    @inject_param('logger')
+    def _get_service_exposed_ports(self, swarm_service, logger=None):
+        if 'Ports' in swarm_service.attrs['Endpoint']:
+            logger.debug(swarm_service.attrs['Endpoint']['Ports'])
+
         return [
             port['PublishedPort']
-            for port in swarm_service.attrs['Spec']['EndpointSpec']['Ports']
-        ] if 'Ports' in swarm_service.attrs['Spec']['EndpointSpec'] else []
+            for port in swarm_service.attrs['Endpoint']['Ports']
+            if 'PublishedPort' in port
+        ] if 'Ports' in swarm_service.attrs['Endpoint'] else []
 
 
     def _get_containers(self):

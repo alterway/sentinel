@@ -43,12 +43,13 @@ class ConsulAdapter(BackendAdapter):
                 }
             }
 
+            logger.debug('Ask for register service %s : %s %s:%s' % (service.name, node.name, node.address, service.port))
             response = requests.put('%s/v1/catalog/register' % self.address, data=json.dumps(payload))
 
-            if response.json():
-                logger.info("Register Service : %s - %s" % (service.name, node.name))
+            if response.status_code == 200 and response.json():
+                logger.info("Register Service : %s - %s %s:%s" % (service.name, node.name, node.address, service.port))
             else:
-                logger.error("Failed to register service %s for node %s" % (service.name, node.name))
+                logger.error("Failed to register service %s for node %s : %s" % (service.name, node.name, response.content))
 
     @inject_param("logger")
     def remove_service_with_tag(self, tag, logger=None):
@@ -73,6 +74,17 @@ class ConsulAdapter(BackendAdapter):
         else:
             logger.debug("Service with tag %s not found in consul" % tag)
 
+    @inject_param('logger')
+    def deregister_node(self, node_name, logger=None):
+        payload = {
+            'Node': node_name
+        }
+        response = requests.put('%s/v1/catalog/deregister' % self.address, data=json.dumps(payload))
+
+        if response.status_code == 200 and response.json():
+            logger.info('Deregister Node : %s ' % node_name)
+        else:
+            logger.error("Failed to deregister node %s : %s" % (node_name, response.content))
 
 
 

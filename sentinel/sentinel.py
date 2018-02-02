@@ -20,6 +20,8 @@ def process_event(event, backend_adapter=None, orchestrator_adapter=None, logger
         tag_to_remove_on_backend = orchestrator_adapter.get_service_tag_to_remove(event)
         if tag_to_remove_on_backend is not None:
             backend_adapter.remove_service_with_tag(tag_to_remove_on_backend)
+    else:
+        orchestrator_adapter.process_event(event)
 
 
 
