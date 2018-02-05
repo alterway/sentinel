@@ -2,6 +2,7 @@ import docker
 from adapters.orchestrators.orchestrator import OrchestratorAdapter
 from models import Service, Node
 from utils.dependencies_injection import inject_param
+import time
 
 
 class SwarmAdapter(OrchestratorAdapter):
@@ -51,7 +52,7 @@ class SwarmAdapter(OrchestratorAdapter):
         # Get containers
         containers = self._get_containers()
         for container in containers:
-            services.extend(self._get_services_object_from_container(container))
+            services.extend(self._get_services_object_from_container(container.id))
 
         return services
 
@@ -59,7 +60,7 @@ class SwarmAdapter(OrchestratorAdapter):
         if event['Type'] == 'service' and self._is_manager():
             return self._get_services_object(self.client.services.get(event['Actor']['ID']))
         elif event['Type'] == 'container':
-            return self._get_services_object_from_container(self.client.containers.get(event['Actor']['ID']))
+            return self._get_services_object_from_container(event['Actor']['ID'])
 
         return []
 
@@ -89,9 +90,10 @@ class SwarmAdapter(OrchestratorAdapter):
                     tags = ['swarm-service:%s' % service.id]
                     labels, envs = self._get_swarm_service_labels_and_vars(service)
                     tags.extend(self._get_tags(labels, envs, port['internal_port']))
+                    name = self._get_name_from_label_and_envs(labels, envs, port['internal_port'])
                     services.append(
                         Service(
-                            name="%s-%s" % (service.attrs['Spec']['Name'], port['external_port']),
+                            name=name if name is not None else "%s-%s" % (service.attrs['Spec']['Name'], port['external_port']),
                             nodes=nodes,
                             tags=tags,
                             port=port['external_port']
@@ -104,7 +106,16 @@ class SwarmAdapter(OrchestratorAdapter):
         return services
 
     @inject_param('logger')
-    def _get_services_object_from_container(self, container, logger=None):
+    def _get_services_object_from_container(self, container_id, logger=None):
+        container = self.client.containers.get(container_id)
+        waiting = 0
+        # Wait if container is not running
+        while container.attrs['State']['Status'] != "running" and waiting != 10:
+            logger.debug("DEBUG container status : %s wait..." % container.attrs['State']['Status'])
+            time.sleep(1)
+            waiting += 1
+            container = self.client.containers.get(container_id)
+
         exposed_ports = self._get_container_exposed_ports(container)
         container_name = container.attrs['Config']['Labels']['com.docker.compose.service'] if 'com.docker.compose.service' in container.attrs['Config']['Labels'] else container.attrs['Name'].replace('/', '')
         services = []
@@ -115,9 +126,10 @@ class SwarmAdapter(OrchestratorAdapter):
                 tags = ['container:%s' % container.id]
                 labels, envs = self._get_container_labels_and_vars(container)
                 tags.extend(self._get_tags(labels, envs, port['internal_port']))
+                name = self._get_name_from_label_and_envs(labels, envs, port['internal_port'])
                 services.append(
                     Service(
-                        name="%s-%s" % (container_name, port['internal_port']),
+                        name=name if name is not None else "%s-%s" % (container_name, port['internal_port']),
                         port=port['external_port'],
                         nodes=[
                             Node(
@@ -169,6 +181,7 @@ class SwarmAdapter(OrchestratorAdapter):
     @inject_param('logger')
     def _get_container_exposed_ports(self, container, logger=None):
         ports = []
+        logger.debug("DEBUG NetworkSetting : %s" % container.attrs['NetworkSettings']['Ports'])
         for key in container.attrs['NetworkSettings']['Ports'].keys():
             if container.attrs['NetworkSettings']['Ports'][key] is not None and len(container.attrs['NetworkSettings']['Ports'][key][0]['HostPort']) != 0:
                 ports.append({
@@ -224,3 +237,20 @@ class SwarmAdapter(OrchestratorAdapter):
         logger.debug("DEBUG Tags : %s" % list(set(tags)))
 
         return list(set(tags))
+
+    @inject_param('logger')
+    def _get_name_from_label_and_envs(self, labels, envs, internal_port, logger=None):
+        keys = ['service_name', 'service_%s_name' % internal_port]
+        envs_dict = {}
+        for env in envs:
+            envs_dict[env.split('=')[0].lower()] = env.split('=')[1]
+        logger.debug("DEBUG envs : %s" % envs_dict)
+
+        for key in keys:
+            if key in labels:
+                return labels[key]
+
+            if key in envs_dict:
+                return envs_dict[key]
+
+        return None
