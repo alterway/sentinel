@@ -87,7 +87,8 @@ class SwarmAdapter(OrchestratorAdapter):
             else:
                 for port in exposed_ports:
                     tags = ['swarm-service:%s' % service.id]
-                    tags.extend(self._get_swarm_service_tags(service, port['internal_port']))
+                    labels, envs = self._get_swarm_service_labels_and_vars(service)
+                    tags.extend(self._get_tags(labels, envs, port['internal_port']))
                     services.append(
                         Service(
                             name="%s-%s" % (service.attrs['Spec']['Name'], port['external_port']),
@@ -111,17 +112,20 @@ class SwarmAdapter(OrchestratorAdapter):
             logger.info('Ignored Service : %s don\'t publish port' % container_name)
         else:
             for port in exposed_ports:
+                tags = ['container:%s' % container.id]
+                labels, envs = self._get_container_labels_and_vars(container)
+                tags.extend(self._get_tags(labels, envs, port['internal_port']))
                 services.append(
                     Service(
-                        name="%s-%s" % (container_name, port),
-                        port=port,
+                        name="%s-%s" % (container_name, port['internal_port']),
+                        port=port['external_port'],
                         nodes=[
                             Node(
                                 name=self.client.info()['Name'],
                                 address=self.client.info()['Swarm']['NodeAddr']
                             )
                         ],
-                        tags=['container:%s' % container.id]
+                        tags=tags
                     )
                 )
 
@@ -162,18 +166,21 @@ class SwarmAdapter(OrchestratorAdapter):
             if container.status == 'running' and 'com.docker.swarm.service.id' not in container.attrs['Config']['Labels']
         ]
 
-    def _get_container_exposed_ports(self, container):
+    @inject_param('logger')
+    def _get_container_exposed_ports(self, container, logger=None):
         ports = []
         for key in container.attrs['NetworkSettings']['Ports'].keys():
             if container.attrs['NetworkSettings']['Ports'][key] is not None and len(container.attrs['NetworkSettings']['Ports'][key][0]['HostPort']) != 0:
-                ports.append(int(container.attrs['NetworkSettings']['Ports'][key][0]['HostPort']))
+                ports.append({
+                    'internal_port': int(key.replace('/tcp', '').replace('/udp', '')),
+                    'external_port': int(container.attrs['NetworkSettings']['Ports'][key][0]['HostPort'])
+                })
 
+        logger.debug('DEBUG ports : %s' % ports)
         return ports
 
     @inject_param('logger')
-    def _get_swarm_service_tags(self, swarm_service, internal_port, logger=None):
-        tags = []
-        keys = ["service_tags", "service_%s_tags" % internal_port]
+    def _get_swarm_service_labels_and_vars(self, swarm_service, logger=None):
         labels = swarm_service.attrs['Spec']['Labels']
         logger.debug("DEBUG labels : %s" % labels)
         envs = [
@@ -181,6 +188,23 @@ class SwarmAdapter(OrchestratorAdapter):
             for env in swarm_service.attrs['Spec']['TaskTemplate']['ContainerSpec']['Env']
         ] if 'Env' in swarm_service.attrs['Spec']['TaskTemplate']['ContainerSpec'] else []
 
+        return labels, envs
+
+    @inject_param('logger')
+    def _get_container_labels_and_vars(self, container, logger=None):
+        labels = container.attrs['Config']['Labels']
+        logger.debug("DEBUG labels : %s" % labels)
+        envs = [
+            env
+            for env in container.attrs['Config']['Env']
+        ] if 'Env' in container.attrs['Config'] else []
+
+        return labels, envs
+
+    @inject_param('logger')
+    def _get_tags(self, labels, envs, internal_port, logger=None):
+        tags = []
+        keys = ["service_tags", "service_%s_tags" % internal_port]
         envs_dict = {}
         for env in envs:
             envs_dict[env.split('=')[0].lower()] = env.split('=')[1]
@@ -200,4 +224,3 @@ class SwarmAdapter(OrchestratorAdapter):
         logger.debug("DEBUG Tags : %s" % list(set(tags)))
 
         return list(set(tags))
-
