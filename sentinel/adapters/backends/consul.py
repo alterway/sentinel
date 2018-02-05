@@ -9,7 +9,7 @@ from utils.dependencies_injection import inject_param
 
 class ConsulAdapter(BackendAdapter):
     def __init__(self):
-        self.address = os.environ.get('CONSUL_ADDRESS')
+        self.address = os.environ.get('CONSUL_ADDRESS') if os.environ.get('CONSUL_ADDRESS') is not None else "http://127.0.0.1:8500"
 
     @inject_param('logger')
     def get_services(self, logger=None):
@@ -19,7 +19,7 @@ class ConsulAdapter(BackendAdapter):
             for key in response.keys()
         ]
 
-        for service in services:
+        for service in sorted(services, key=lambda x: x.name):
             response = requests.get('%s/v1/catalog/service/%s' % (self.address, service.name)).json()
             for node in response:
                 service.nodes.append(Node(address=node['Address'], name=node['Node']))
