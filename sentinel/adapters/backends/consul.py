@@ -54,15 +54,7 @@ class ConsulAdapter(BackendAdapter):
         service_to_remove = [service for service in services if tag in service.tags]
 
         if len(service_to_remove) != 0:
-            logger.debug("Process service %s to deregister on nodes : %s" % (service_to_remove[0].name, service_to_remove[0].nodes))
-            for node in service_to_remove[0].nodes:
-                logger.debug("Process node %s to deregister service" % node.name)
-                response = requests.put('http://%s:8500/v1/agent/service/deregister/%s-%s' % (node.address, service_to_remove[0].name, node.name))
-
-                if response.status_code == 200:
-                    logger.info('Deregister Service : %s - %s' % (service_to_remove[0].name, node.name))
-                else:
-                    logger.error("Failed to deregister service %s for node %s : %s" % (service_to_remove[0].name, node.name, response.content))
+            self.deregister_service(service_to_remove[0])
         else:
             logger.debug("Service with tag %s not found in consul" % tag)
 
@@ -78,6 +70,17 @@ class ConsulAdapter(BackendAdapter):
         else:
             logger.error("Failed to deregister node %s : %s" % (node_name, response.content))
 
+    @inject_param('logger')
+    def deregister_service(self, service, logger=None):
+        logger.debug("Process service %s to deregister on nodes : %s" % (service.name, service.nodes))
+        for node in service.nodes:
+            logger.debug("Process node %s to deregister service" % node.name)
+            response = requests.put('http://%s:8500/v1/agent/service/deregister/%s-%s' % (node.address, service.name, node.name))
+
+            if response.status_code == 200:
+                logger.info('Deregister Service : %s - %s' % (service.name, node.name))
+            else:
+                logger.error("Failed to deregister service %s for node %s : %s" % (service.name, node.name, response.content))
 
 
 
