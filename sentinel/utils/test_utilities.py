@@ -5,3 +5,15 @@ class StubResponse():
 
     def json(self):
         return self.result
+
+
+class Container():
+    def __init__(self, id, attrs={}):
+        self.id = id
+        self.attrs = attrs
+
+
+class SwarmService():
+    def __init__(self, id, attrs={}):
+        self.id = id
+        self.attrs = attrs
