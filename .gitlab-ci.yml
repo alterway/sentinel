@@ -3,6 +3,8 @@ stages:
   - quality
   - publish
 
+variables:
+  MYUSER: "1001"
 
 sources-quality:
   stage: quality
