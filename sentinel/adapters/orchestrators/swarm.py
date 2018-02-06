@@ -107,14 +107,14 @@ class SwarmAdapter(OrchestratorAdapter):
 
     @inject_param('logger')
     def _get_services_object_from_container(self, container_id, logger=None):
-        container = self.client.containers.get(container_id)
+        container = self._get_container_from_id(container_id)
         waiting = 0
         # Wait if container is not running
         while container.attrs['State']['Status'] != "running" and waiting != 10:
             logger.debug("DEBUG container status : %s wait..." % container.attrs['State']['Status'])
             time.sleep(1)
             waiting += 1
-            container = self.client.containers.get(container_id)
+            container = self._get_container_from_id(container_id)
 
         exposed_ports = self._get_container_exposed_ports(container)
         container_name = container.attrs['Config']['Labels']['com.docker.compose.service'] if 'com.docker.compose.service' in container.attrs['Config']['Labels'] else container.attrs['Name'].replace('/', '')
@@ -133,8 +133,8 @@ class SwarmAdapter(OrchestratorAdapter):
                         port=port['external_port'],
                         nodes=[
                             Node(
-                                name=self.client.info()['Name'],
-                                address=self.client.info()['Swarm']['NodeAddr']
+                                name=self._get_local_node_name(),
+                                address=self._get_local_node_address()
                             )
                         ],
                         tags=tags
@@ -142,6 +142,9 @@ class SwarmAdapter(OrchestratorAdapter):
                 )
 
         return services
+
+    def _get_container_from_id(self, container_id):
+        return self.client.containers.get(container_id)
 
     def _is_manager(self):
         return self.client.info()['Swarm']['ControlAvailable']
@@ -152,7 +155,7 @@ class SwarmAdapter(OrchestratorAdapter):
     def _get_nodes_for_service(self, swarm_service):
         result = []
 
-        nodes = [node.attrs for node in self.client.nodes.list()]
+        nodes = [node.attrs for node in self._list_nodes()]
         for node_attrs in nodes:
             if node_attrs['Status']['State'] == 'ready':
                 result.append(Node(name=node_attrs['Description']['Hostname'], address=node_attrs['Status']['Addr']))
@@ -174,7 +177,7 @@ class SwarmAdapter(OrchestratorAdapter):
     def _get_containers(self):
         return [
             container
-            for container in self.client.containers.list()
+            for container in self._list_container()
             if container.status == 'running' and 'com.docker.swarm.service.id' not in container.attrs['Config']['Labels']
         ]
 
@@ -254,3 +257,15 @@ class SwarmAdapter(OrchestratorAdapter):
                 return envs_dict[key]
 
         return None
+
+    def _get_local_node_name(self):
+        return self.client.info()['Name']
+
+    def _get_local_node_address(self):
+        return self.client.info()['Swarm']['NodeAddr']
+
+    def _list_nodes(self):
+        return self.client.nodes.list()
+
+    def _list_container(self):
+        return self.client.containers.list()
