@@ -3,11 +3,6 @@ class NotImplemented(Exception):
         self.message = message
 
 
-class RegisterFailed(Exception):
-    def __init__(self, message):
-        self.message = message
-
-
 class BackendAdapterNotKnown(Exception):
     def __init__(self, backend):
         self.message = 'Backend adpater doesn\'t exists : %s' % backend

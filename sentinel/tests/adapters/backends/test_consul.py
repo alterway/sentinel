@@ -119,7 +119,6 @@ class TestConsul(unittest.TestCase):
         self.assertEqual(1, len(services_dict['toto'].tags))
         self.assertEqual(2, len(services_dict['hello'].tags))
 
-
     @patch.object(requests, 'put', side_effect=[
         StubResponse(200, True),
         StubResponse(200, True),

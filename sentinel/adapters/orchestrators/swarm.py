@@ -74,7 +74,6 @@ class SwarmAdapter(OrchestratorAdapter):
             logger.debug("No tag to remove")
             return None
 
-
     @inject_param('logger')
     def _get_services_object(self, service, logger=None):
         exposed_ports = self._get_service_exposed_ports(service)
@@ -172,7 +171,6 @@ class SwarmAdapter(OrchestratorAdapter):
             for port in swarm_service.attrs['Endpoint']['Ports']
             if 'PublishedPort' in port
         ] if 'Ports' in swarm_service.attrs['Endpoint'] else []
-
 
     def _get_containers(self):
         return [

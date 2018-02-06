@@ -3,7 +3,6 @@ from exceptions import NotImplemented
 
 class BackendAdapter():
 
-
     def get_services(self):
         raise NotImplemented("The method get_services() is not implemented for this backend")
 

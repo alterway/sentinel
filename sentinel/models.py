@@ -6,6 +6,7 @@ class Service(object):
         self.tags = tags
         self.nodes = nodes
 
+
 class Node(object):
     def __init__(self, name, address):
         self.name = name

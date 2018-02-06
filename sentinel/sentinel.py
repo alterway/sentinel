@@ -24,14 +24,12 @@ def process_event(event, backend_adapter=None, orchestrator_adapter=None, logger
         orchestrator_adapter.process_event(event)
 
 
-
 @inject_param('backend_adapter')
 @inject_param('orchestrator_adapter')
 @inject_param('logger')
 def sync(backend_adapter=None, orchestrator_adapter=None, logger=None):
     registered_services = backend_adapter.get_services()
     running_services = orchestrator_adapter.get_services()
-
 
     # Register existant services if not in backend
     logger.info("Register existant services if not in backend...")
@@ -62,5 +60,3 @@ if __name__ == "__main__":
     set_logging()
     sync()
     listen_events()
-
-

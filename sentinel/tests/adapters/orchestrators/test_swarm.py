@@ -196,14 +196,17 @@ class TestSwarm(unittest.TestCase):
         tag = self.swarm_adapter.get_service_tag_to_remove(
             {
                 'Type': 'container',
-                'Actor': {'ID': '92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04'}
+                'Actor': {
+                    'ID': '92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
+                    'Attributes': {}
+                }
             }
         )
 
         self.assertEqual('container:92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04', tag)
 
     @patch.object(SwarmAdapter, '_is_manager', return_value=False)
-    def test_get_service_tag_to_remove_container(self, mock_is_manager):
+    def test_get_service_tag_to_remove_container_no_manager(self, mock_is_manager):
         tag = self.swarm_adapter.get_service_tag_to_remove(
             {
                 'Type': 'service',
@@ -478,5 +481,3 @@ class TestSwarm(unittest.TestCase):
             'hello',
             self.swarm_adapter._get_name_from_label_and_envs(labels={}, envs=['service_80_name=hello'], internal_port=80)
         )
-
-

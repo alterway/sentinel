@@ -3,7 +3,6 @@ import requests
 import json
 from adapters.backends.backend import BackendAdapter
 from models import Service, Node
-from exceptions import RegisterFailed
 from utils.dependencies_injection import inject_param
 
 
@@ -81,9 +80,3 @@ class ConsulAdapter(BackendAdapter):
                 logger.info('Deregister Service : %s - %s' % (service.name, node.name))
             else:
                 logger.error("Failed to deregister service %s for node %s : %s" % (service.name, node.name, response.content))
-
-
-
-
-
-

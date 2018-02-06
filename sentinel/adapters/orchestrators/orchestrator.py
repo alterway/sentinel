@@ -14,4 +14,3 @@ class OrchestratorAdapter():
 
     def get_service_tag_to_remove(self):
         raise NotImplemented('Method get_service_tag_to_remove() not implemented')
-
