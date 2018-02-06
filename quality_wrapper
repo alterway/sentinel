@@ -1,0 +1,4 @@
+#!/bin/bash
+
+docker pull hub.alterway.fr/library/python:3.5 > /dev/null
+docker run --rm -v $PWD:/src -w /src -e BACKEND=consul -e ORCHESTRATOR=swarm -e VIRTUALENV=sentinel -u $MYUSER -v /etc/passwd:/etc/passwd:ro hub.alterway.fr/library/python:3.5 ./quality.py

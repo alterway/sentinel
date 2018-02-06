@@ -1,0 +1,5 @@
+FROM hub.alterway.fr/sentinel:develop
+
+COPY quality.py .
+
+RUN python quality.py
