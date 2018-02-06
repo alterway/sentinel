@@ -5,11 +5,13 @@ RUN echo "http://dl-6.alpinelinux.org/alpine/edge/community" >> /etc/apk/reposit
     && apk add --no-cache docker \
     && mkdir -p /var/www/html
 
-COPY sentinel /sentinel
+WORKDIR /usr/local/lib/python3.6/site-packages
+COPY sentinel sentinel
+COPY setup.py .
 
-RUN pip install docker
+RUN pip install -e .
 
-WORKDIR /sentinel
+ENV BACKEND consul
+ENV ORCHESTRATOR swarm
 
-ENTRYPOINT ["python"]
-CMD ["sentinel.py"]
+ENTRYPOINT ["sentinel"]

@@ -1,6 +1,19 @@
 stages:
   - build
-  - test
+  - quality
+  - publish
+
+
+sources-quality:
+  stage: quality
+  except:
+    - master
+    - develop
+    - /^v.*$/
+  tags:
+    - pic-runner
+  script:
+    - ./quality_wrapper
 
 
 build-dev:
@@ -12,4 +25,23 @@ build-dev:
     - pic-runner
   script:
     - docker build --pull -t hub.alterway.fr/sentinel:${CI_BUILD_REF_NAME} .
+    - docker push hub.alterway.fr/sentinel:${CI_BUILD_REF_NAME}
+
+image-quality:
+  stage: quality
+  only:
+    - master
+    - develop
+  tags:
+    - pic-runner
+  script:
+    - docker build -t ${CI_BUILD_REF_NAME}-test -f DockerfileQuality${CI_BUILD_REF_NAME} .
+    - docker rmi ${CI_BUILD_REF_NAME}-test
+
+publish-release:
+  stage: publish
+  only:
+    - /^v.*$/
+  script:
+    - docker build --pull -t -f DockerfileRelease hub.alterway.fr/sentinel:${CI_BUILD_REF_NAME} .
     - docker push hub.alterway.fr/sentinel:${CI_BUILD_REF_NAME}

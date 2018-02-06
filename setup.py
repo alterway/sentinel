@@ -3,12 +3,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='sentinel',
-    version='1.0',
+    version='v1.0',
     description='Python project to register container docker as service in a backend',
     author='Ophélie Mauger',
     author_email='ophelie.mauger@alterway.fr',
     entry_points={
-        'console_scripts': ['sentinel=sentinel:main']
+        'console_scripts': ['sentinel=sentinel.sentinel:main']
     },
     package_dir={'': 'sentinel'},
     packages=find_packages(where="sentinel"),

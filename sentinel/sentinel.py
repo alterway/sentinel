@@ -56,7 +56,7 @@ def listen_events(logger=None):
         process_event(event)
 
 
-if __name__ == "__main__":
+def main():
     set_logging()
     sync()
     listen_events()
