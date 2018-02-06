@@ -2,6 +2,7 @@ import unittest
 from mock import patch
 from models import Service, Node
 from adapters.orchestrators.swarm import SwarmAdapter
+from adapters.backends.consul import ConsulAdapter
 from utils.test_utilities import Container, SwarmService, SwarmNode
 
 
@@ -80,6 +81,20 @@ class TestSwarm(unittest.TestCase):
         )
         mock_process_down.assert_not_called()
         mock_process_up.assert_called_once_with('node1', 'ready')
+
+    @patch.object(SwarmAdapter, 'get_service', return_value=[
+        Service(name='hello', port=3000, tags=[], nodes=[Node(name="node1", address="192.168.50.4")]),
+        Service(name='hello', port=3001, tags=[], nodes=[Node(name="node1", address="192.168.50.4")])
+    ])
+    @patch.object(ConsulAdapter, 'remove_service_with_tag', return_value=None)
+    @patch.object(ConsulAdapter, 'register_service', return_value=None)
+    def test_process_event_service_update(self, mock_register_service, mock_remove_service, mock_get_service):
+        self.swarm_adapter.process_event(
+            {"Type": "service", "Action": "update", "Actor": {"ID": "pyqeknfbzwrncs49g79r9967i", "Attributes": {"name": "hello"}}}
+        )
+        mock_get_service.assert_called_once()
+        mock_remove_service.assert_called_once()
+        self.assertEqual(2, mock_register_service.call_count)
 
     @patch.object(SwarmAdapter, '_is_manager', return_value=True)
     @patch.object(SwarmAdapter, '_get_swarm_services', return_value=['service1'])

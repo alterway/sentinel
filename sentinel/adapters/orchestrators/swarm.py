@@ -10,18 +10,22 @@ class SwarmAdapter(OrchestratorAdapter):
     @inject_param('backend_adapter')
     @inject_param('logger')
     def process_event(self, event, backend_adapter=None, logger=None):
-        if event['Type'] == 'node' and event['Action'] == 'update':
-            attrs = event['Actor']['Attributes']
-            if 'availability.new' in attrs:
-                if attrs['availability.new'] == 'drain':
-                    self._process_node_down(attrs['name'], 'drain')
-                elif attrs['availability.new'] == 'active':
-                    self._process_node_up(attrs['name'], 'active')
-            elif 'state.new' in attrs:
-                if attrs['state.new'] == 'down':
-                    self._process_node_down(attrs['name'], 'down')
-                elif attrs['state.new'] == 'ready':
-                    self._process_node_up(attrs['name'], 'ready')
+        if event['Action'] == 'update':
+            logger.debug('DEBUG Event Update : %s' % event)
+            if event['Type'] == 'node':
+                attrs = event['Actor']['Attributes']
+                if 'availability.new' in attrs:
+                    if attrs['availability.new'] == 'drain':
+                        self._process_node_down(attrs['name'], 'drain')
+                    elif attrs['availability.new'] == 'active':
+                        self._process_node_up(attrs['name'], 'active')
+                elif 'state.new' in attrs:
+                    if attrs['state.new'] == 'down':
+                        self._process_node_down(attrs['name'], 'down')
+                    elif attrs['state.new'] == 'ready':
+                        self._process_node_up(attrs['name'], 'ready')
+            elif event['Type'] == 'service':
+                self._process_update_service(event)
 
     @inject_param('backend_adapter')
     @inject_param('logger')
@@ -34,6 +38,14 @@ class SwarmAdapter(OrchestratorAdapter):
     def _process_node_up(self, node_name, new_status, backend_adapter=None, logger=None):
         logger.info('Swarm Node %s is %s, process register services...' % (node_name, new_status))
         for service in self.get_services():
+            backend_adapter.register_service(service)
+
+    @inject_param('backend_adapter')
+    def _process_update_service(self, event, backend_adapter=None):
+        time.sleep(2)
+        services = self.get_service(event)
+        backend_adapter.remove_service_with_tag("swarm-service:%s" % event['Actor']['ID'])
+        for service in services:
             backend_adapter.register_service(service)
 
     def get_services(self):
