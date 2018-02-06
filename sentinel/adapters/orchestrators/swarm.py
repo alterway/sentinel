@@ -7,9 +7,6 @@ import time
 
 class SwarmAdapter(OrchestratorAdapter):
 
-    def __init__(self):
-        self.client = docker.DockerClient(base_url='unix://var/run/docker.sock', version='auto')
-
     @inject_param('backend_adapter')
     @inject_param('logger')
     def process_event(self, event, backend_adapter=None, logger=None):
@@ -58,7 +55,7 @@ class SwarmAdapter(OrchestratorAdapter):
 
     def get_service(self, event):
         if event['Type'] == 'service' and self._is_manager():
-            return self._get_services_object(self.client.services.get(event['Actor']['ID']))
+            return self._get_services_object(self._get_swarm_service_by_id(event['Actor']['ID']))
         elif event['Type'] == 'container':
             return self._get_services_object_from_container(event['Actor']['ID'])
 
@@ -141,15 +138,6 @@ class SwarmAdapter(OrchestratorAdapter):
                 )
 
         return services
-
-    def _get_container_from_id(self, container_id):
-        return self.client.containers.get(container_id)
-
-    def _is_manager(self):
-        return self.client.info()['Swarm']['ControlAvailable']
-
-    def _get_swarm_services(self):
-        return self.client.services.list()
 
     def _get_nodes_for_service(self, swarm_service):
         result = []
@@ -257,13 +245,36 @@ class SwarmAdapter(OrchestratorAdapter):
         return None
 
     def _get_local_node_name(self):
-        return self.client.info()['Name']
+        client = self._get_docker_socket()
+        return client.info()['Name']
 
     def _get_local_node_address(self):
-        return self.client.info()['Swarm']['NodeAddr']
+        client = self._get_docker_socket()
+        return client.info()['Swarm']['NodeAddr']
 
     def _list_nodes(self):
-        return self.client.nodes.list()
+        client = self._get_docker_socket()
+        return client.nodes.list()
 
     def _list_container(self):
-        return self.client.containers.list()
+        client = self._get_docker_socket()
+        return client.containers.list()
+
+    def _get_swarm_service_by_id(self, service_id):
+        client = self._get_docker_socket()
+        return client.services.get(service_id)
+
+    def _get_container_from_id(self, container_id):
+        client = self._get_docker_socket()
+        return client.containers.get(container_id)
+
+    def _is_manager(self):
+        client = self._get_docker_socket()
+        return client.info()['Swarm']['ControlAvailable']
+
+    def _get_swarm_services(self):
+        client = self._get_docker_socket()
+        return client.services.list()
+
+    def _get_docker_socket(self):
+        return docker.DockerClient(base_url='unix://var/run/docker.sock', version='auto')
