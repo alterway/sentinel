@@ -25,10 +25,17 @@ class TestSentinel(unittest.TestCase):
         mock_get_services.assert_called_once()
         mock_register_service.assert_not_called()
 
+    @patch.object(SwarmAdapter, '_is_manager', return_value=True)
     @patch.object(ConsulAdapter, 'remove_service_with_tag', return_value=None)
-    def test_process_event_remove_type_service(self, mock_remove_service_with_tag):
+    def test_process_event_remove_type_service(self, mock_remove_service_with_tag, mock_swarm_is_manager):
         process_event({'Action': 'remove', 'Type': 'service', 'Actor': {'ID': '123456'}})
         mock_remove_service_with_tag.assert_called_once_with('swarm-service:123456')
+
+    @patch.object(SwarmAdapter, '_is_manager', return_value=False)
+    @patch.object(ConsulAdapter, 'remove_service_with_tag', return_value=None)
+    def test_process_event_remove_type_service_not_manager(self, mock_remove_service_with_tag, mock_swarm_is_manager):
+        process_event({'Action': 'remove', 'Type': 'service', 'Actor': {'ID': '123456'}})
+        mock_remove_service_with_tag.assert_not_called()
 
     @patch.object(ConsulAdapter, 'remove_service_with_tag', return_value=None)
     def test_process_event_remove_type_container(self, mock_remove_service_with_tag):
