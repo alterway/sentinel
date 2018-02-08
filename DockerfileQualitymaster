@@ -1,0 +1,8 @@
+FROM hub.alterway.fr/sentinel:master
+
+WORKDIR /
+COPY quality.py .
+COPY setup.py .
+
+RUN cp -R /usr/local/lib/python3.6/site-packages/sentinel /sentinel \
+    && python quality.py
