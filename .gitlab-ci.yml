@@ -45,5 +45,7 @@ publish-release:
   only:
     - /^v.*$/
   script:
-    - docker build --pull -t -f DockerfileRelease hub.alterway.fr/sentinel:${CI_BUILD_REF_NAME} .
+    - docker tag hub.alterway.fr/sentinel:master hub.alterway.fr/sentinel:${CI_BUILD_REF_NAME}
+    - docker tag hub.alterway.fr/sentinel:master hub.alterway.fr/sentinel:latest
     - docker push hub.alterway.fr/sentinel:${CI_BUILD_REF_NAME}
+    - docker push hub.alterway.fr/sentinel:latest
