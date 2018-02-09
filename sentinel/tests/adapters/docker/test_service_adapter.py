@@ -23,3 +23,15 @@ class TestServiceAdapter(unittest.TestCase):
             'hello',
             self.service_adapter._get_name_from_label_and_envs(labels={}, envs=['service_80_name=hello'], internal_port=80)
         )
+
+    def test_has_to_be_registred_true(self):
+        self.assertEqual(
+            True,
+            self.service_adapter._has_to_be_registred(labels={'not_register': 1, 'service_443_name': 'hello'}, envs=[], internal_port=443)
+        )
+
+    def test_has_to_be_registred_false(self):
+        self.assertEqual(
+            False,
+            self.service_adapter._has_to_be_registred(labels={'not_register': 1, 'service_443_name': 'hello'}, envs=[], internal_port=80)
+        )

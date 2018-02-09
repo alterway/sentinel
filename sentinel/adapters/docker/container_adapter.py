@@ -44,21 +44,22 @@ class ContainerAdapter(ServiceAdapter):
             for port in exposed_ports:
                 tags = ['container:%s' % container.id]
                 labels, envs = self._get_container_labels_and_vars(container)
-                tags.extend(self._get_tags(labels, envs, port['internal_port']))
-                name = self._get_name_from_label_and_envs(labels, envs, port['internal_port'])
-                services.append(
-                    Service(
-                        name=name if name is not None else "%s-%s" % (container_name, port['internal_port']),
-                        port=port['external_port'],
-                        nodes=[
-                            Node(
-                                name=docker_adapter.get_local_node_name(),
-                                address=docker_adapter.get_local_node_address()
-                            )
-                        ],
-                        tags=tags
+                if self._has_to_be_registred(labels, envs, port['internal_port']):
+                    tags.extend(self._get_tags(labels, envs, port['internal_port']))
+                    name = self._get_name_from_label_and_envs(labels, envs, port['internal_port'])
+                    services.append(
+                        Service(
+                            name=name if name is not None else "%s-%s" % (container_name, port['internal_port']),
+                            port=port['external_port'],
+                            nodes=[
+                                Node(
+                                    name=docker_adapter.get_local_node_name(),
+                                    address=docker_adapter.get_local_node_address()
+                                )
+                            ],
+                            tags=tags
+                        )
                     )
-                )
 
         return services
 

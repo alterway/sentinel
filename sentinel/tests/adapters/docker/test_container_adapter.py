@@ -22,22 +22,22 @@ class TestContainerAdapter(unittest.TestCase):
             }
         }
     ))
-    @patch.object(ContainerAdapter, '_get_container_exposed_ports', return_value=[{'internal_port': 80, 'external_port': 3000}])
-    @patch.object(ContainerAdapter, '_get_container_labels_and_vars', return_value=[{"service_tags": 'http,https'}, ['service_name=toto']])
+    @patch.object(ContainerAdapter, '_get_container_exposed_ports', return_value=[{'internal_port': 80, 'external_port': 3000}, {'internal_port': 443, 'external_port': 30001}])
+    @patch.object(ContainerAdapter, '_get_container_labels_and_vars', return_value=[{"service_80_tags": 'http'}, ['service_80_name=toto', 'not_register=1']])
     @patch.object(DockerAdapter, 'get_local_node_name', return_value='node1')
     @patch.object(DockerAdapter, 'get_local_node_address', return_value='192.168.50.4')
     def test_get_services_object(self, mock_get_local_node_address, mock_get_local_node_name, mock__get_container_labels_and_vars, mock_get_container_exposed_ports, mock_get_container_from_id):
         services = self.container_adapter._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
         mock_get_container_from_id.assert_called_once()
         mock_get_container_exposed_ports.assert_called_once()
-        mock__get_container_labels_and_vars.assert_called_once()
+        self.assertEqual(2, mock__get_container_labels_and_vars.call_count)
         mock_get_local_node_name.assert_called_once()
         mock_get_local_node_address.assert_called_once()
 
         self.assertEqual(1, len(services))
         self.assertEqual('toto', services[0].name)
         self.assertEqual(1, len(services[0].nodes))
-        self.assertEqual(3, len(services[0].tags))
+        self.assertEqual(2, len(services[0].tags))
         self.assertEqual(3000, services[0].port)
 
     @patch.object(DockerAdapter, 'get_container_from_id', side_effect=[

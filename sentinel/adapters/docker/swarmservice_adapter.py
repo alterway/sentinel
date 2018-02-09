@@ -39,16 +39,17 @@ class SwarmServiceAdapter(ServiceAdapter):
                 for port in exposed_ports:
                     tags = ['swarm-service:%s' % service.id]
                     labels, envs = self._get_swarm_service_labels_and_vars(service)
-                    tags.extend(self._get_tags(labels, envs, port['internal_port']))
-                    name = self._get_name_from_label_and_envs(labels, envs, port['internal_port'])
-                    services.append(
-                        Service(
-                            name=name if name is not None else "%s-%s" % (service.attrs['Spec']['Name'], port['external_port']),
-                            nodes=nodes,
-                            tags=tags,
-                            port=port['external_port']
+                    if self._has_to_be_registred(labels, envs, port['internal_port']):
+                        tags.extend(self._get_tags(labels, envs, port['internal_port']))
+                        name = self._get_name_from_label_and_envs(labels, envs, port['internal_port'])
+                        services.append(
+                            Service(
+                                name=name if name is not None else "%s-%s" % (service.attrs['Spec']['Name'], port['external_port']),
+                                nodes=nodes,
+                                tags=tags,
+                                port=port['external_port']
+                            )
                         )
-                    )
 
             for service in services:
                 logger.debug(": %s" % service.__dict__)
