@@ -21,9 +21,11 @@ services:
   consul:
     container_name: consul
     image: consul
-    command:
+    command: agent -server -bootstrap-expect 1 -domain vagrant.dev --advertise 192.168.50.4 -node=node1 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
     restart: always
     network_mode: host
+    volumes:
+      - consul-data:/consul/data
 
   sentinel:
     container_name: sentinel
