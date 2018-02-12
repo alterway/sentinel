@@ -1,4 +1,4 @@
-# SENTINEL
+# SENTINEL [![pipeline status](https://git.alterway.fr/CAAS/sentinel/badges/master/pipeline.svg)](https://git.alterway.fr/CAAS/sentinel/commits/master) [![coverage report](https://git.alterway.fr/CAAS/sentinel/badges/master/coverage.svg)](https://git.alterway.fr/CAAS/sentinel/commits/master)
 
 This service permit to discover public services in docker cluster and register it in a backend. The public services are the services who expose port in the docker host
 
