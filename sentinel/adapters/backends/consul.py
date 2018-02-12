@@ -10,13 +10,15 @@ class ConsulAdapter(BackendAdapter):
     def __init__(self):
         self.address = os.environ.get('CONSUL_ADDRESS') if os.environ.get('CONSUL_ADDRESS') is not None else "http://127.0.0.1:8500"
 
+    @inject_param('docker_adapter')
     @inject_param('logger')
-    def get_services(self, logger=None):
+    def get_services(self, docker_adapter=None, logger=None):
         response = requests.get('%s/v1/catalog/services' % self.address).json()
         services = [
             Service(name=key, tags=response[key], nodes=[])
             for key in response.keys()
         ]
+        local_services = []
 
         for service in sorted(services, key=lambda x: x.name):
             response = requests.get('%s/v1/catalog/service/%s' % (self.address, service.name)).json()
@@ -26,7 +28,18 @@ class ConsulAdapter(BackendAdapter):
 
             logger.debug("Nodes for service %s are : %s" % (service.name, service.nodes))
 
-        return services
+        # Filter services not exist on local node
+        local_node_name = docker_adapter.get_local_node_name()
+        for service in services:
+            for tag in service.tags:
+                if "swarm-service" in tag:
+                    local_services.append(service)
+                    break
+                elif "container" in tag and service.nodes[0].name == local_node_name:
+                    local_services.append(service)
+                    break
+
+        return local_services
 
     @inject_param("logger")
     def register_service(self, service, logger=None):
@@ -72,6 +85,7 @@ class ConsulAdapter(BackendAdapter):
     @inject_param('logger')
     def deregister_service(self, service, logger=None):
         logger.debug("Process service %s to deregister on nodes : %s" % (service.name, service.nodes))
+
         for node in service.nodes:
             logger.debug("Process node %s to deregister service" % node.name)
             response = requests.put('http://%s:8500/v1/agent/service/deregister/%s-%s' % (node.address, service.name, node.name.split('.')[0]))
