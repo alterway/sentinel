@@ -3,6 +3,7 @@ from mock import patch
 import requests
 from models import Service, Node
 from adapters.backends.consul import ConsulAdapter
+from adapters.docker.docker_adapter import DockerAdapter
 from utils.test_utilities import StubResponse
 
 
@@ -103,20 +104,18 @@ class TestConsul(unittest.TestCase):
             ]
         )
     ])
-    def test_get_services(self, mock_get):
+    @patch.object(DockerAdapter, 'get_local_node_name', return_value="node1")
+    def test_get_services(self, mock_get_local_node_name, mock_get):
         services = self.consul_adapter.get_services()
         self.assertEqual(4, mock_get.call_count)
-        self.assertEqual(3, len(services))
+        mock_get_local_node_name.assert_called_once()
+        self.assertEqual(1, len(services))
 
         services_dict = {}
         for service in services:
             services_dict[service.name] = service
 
-        self.assertEqual(3, len(services_dict['consul'].nodes))
-        self.assertEqual(1, len(services_dict['toto'].nodes))
         self.assertEqual(3, len(services_dict['hello'].nodes))
-        self.assertEqual(0, len(services_dict['consul'].tags))
-        self.assertEqual(1, len(services_dict['toto'].tags))
         self.assertEqual(2, len(services_dict['hello'].tags))
 
     @patch.object(requests, 'put', side_effect=[
@@ -235,9 +234,11 @@ class TestConsul(unittest.TestCase):
         StubResponse(200, True),
         StubResponse(200, True)
     ])
-    def test_remove_service_with_tag(self, mock_put, mock_get):
+    @patch.object(DockerAdapter, 'get_local_node_name', return_value="node1")
+    def test_remove_service_with_tag(self, mock_get_local_node_name, mock_put, mock_get,):
         self.consul_adapter.remove_service_with_tag('swarm-service:r1neuke2qg59ivhdblg4dvi7h')
 
+        mock_get_local_node_name.assert_called_once()
         self.assertEqual(4, mock_get.call_count)
         self.assertEqual(3, mock_put.call_count)
 
