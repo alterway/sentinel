@@ -32,7 +32,7 @@ class ConsulAdapter(BackendAdapter):
     def register_service(self, service, logger=None):
         for node in service.nodes:
             payload = {
-                "ID": "%s-%s" % (service.name, node.name),
+                "ID": "%s-%s" % (service.name, node.name.split('.')[0]),
                 "Name": service.name,
                 "Tags": service.tags,
                 "Address": node.address,
@@ -74,7 +74,7 @@ class ConsulAdapter(BackendAdapter):
         logger.debug("Process service %s to deregister on nodes : %s" % (service.name, service.nodes))
         for node in service.nodes:
             logger.debug("Process node %s to deregister service" % node.name)
-            response = requests.put('http://%s:8500/v1/agent/service/deregister/%s-%s' % (node.address, service.name, node.name))
+            response = requests.put('http://%s:8500/v1/agent/service/deregister/%s-%s' % (node.address, service.name, node.name.split('.')[0]))
 
             if response.status_code == 200:
                 logger.info('Deregister Service : %s - %s' % (service.name, node.name))
