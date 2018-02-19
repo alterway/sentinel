@@ -15,9 +15,13 @@ class Container():
 
 
 class SwarmService():
-    def __init__(self, id, attrs={}):
+    def __init__(self, id, attrs={}, tasks=[]):
         self.id = id
         self.attrs = attrs
+        self.list_tasks = tasks
+
+    def tasks(self):
+        return self.list_tasks
 
 
 class SwarmNode():

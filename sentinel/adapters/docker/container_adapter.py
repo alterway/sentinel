@@ -41,9 +41,9 @@ class ContainerAdapter(ServiceAdapter):
         if len(exposed_ports) == 0:
             logger.info('Ignored Service : %s don\'t publish port' % container_name)
         else:
+            tags = ['container:%s' % container.id]
+            labels, envs = self._get_container_labels_and_vars(container)
             for port in exposed_ports:
-                tags = ['container:%s' % container.id]
-                labels, envs = self._get_container_labels_and_vars(container)
                 if self._has_to_be_registred(labels, envs, port['internal_port']):
                     tags.extend(self._get_tags(labels, envs, port['internal_port']))
                     name = self._get_name_from_label_and_envs(labels, envs, port['internal_port'])
