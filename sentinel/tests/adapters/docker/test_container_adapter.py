@@ -30,7 +30,7 @@ class TestContainerAdapter(unittest.TestCase):
         services = self.container_adapter._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
         mock_get_container_from_id.assert_called_once()
         mock_get_container_exposed_ports.assert_called_once()
-        self.assertEqual(2, mock__get_container_labels_and_vars.call_count)
+        self.assertEqual(1, mock__get_container_labels_and_vars.call_count)
         mock_get_local_node_name.assert_called_once()
         mock_get_local_node_address.assert_called_once()
 

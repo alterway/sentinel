@@ -34,5 +34,11 @@ class DockerAdapter():
         client = self._get_docker_socket()
         return client.services.list()
 
+    def get_swarm_service_tasks(self, swarm_service):
+        return swarm_service.tasks()
+
     def _get_docker_socket(self):
-        return docker.DockerClient(base_url='unix://var/run/docker.sock', version='auto')
+        return docker.DockerClient(
+            base_url='unix://var/run/docker.sock',
+            version='auto'
+        )
