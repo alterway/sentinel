@@ -2,6 +2,8 @@ import docker
 
 
 class DockerAdapter():
+    """Adapter to request docker API
+    """
     def get_local_node_name(self):
         client = self._get_docker_socket()
         return client.info()['Name']

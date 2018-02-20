@@ -5,7 +5,8 @@ import time
 
 
 class ContainerAdapter(ServiceAdapter):
-
+    """ Adapter to manage docker container as service
+    """
     @inject_param('docker_adapter')
     def get_services(self, docker_adapter=None):
         services = []

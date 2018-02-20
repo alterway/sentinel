@@ -6,6 +6,8 @@ from utils.dependencies_injection import inject_param
 
 
 class SwarmServiceAdapter(ServiceAdapter):
+    """ Adaper to manage docker swarm service as service
+    """
 
     @inject_param('docker_adapter')
     def get_services(self, docker_adapter=None):

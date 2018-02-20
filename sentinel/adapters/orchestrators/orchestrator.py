@@ -2,6 +2,8 @@ from exceptions import NotImplemented
 
 
 class OrchestratorAdapter():
+    """Interface to create orchestrator adapters
+    """
 
     def process_event(self, event):
         raise NotImplemented('Method process_event() not implemented')

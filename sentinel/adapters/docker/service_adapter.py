@@ -3,6 +3,8 @@ from utils.dependencies_injection import inject_param
 
 
 class ServiceAdapter():
+    """Adapter to manage docker service
+    """
 
     def get_services(self):
         raise NotImplemented('Method get_services not implemented')
