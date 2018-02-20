@@ -5,9 +5,8 @@ import time
 
 class SwarmAdapter(OrchestratorAdapter):
 
-    @inject_param('backend_adapter')
     @inject_param('logger')
-    def process_event(self, event, backend_adapter=None, logger=None):
+    def process_event(self, event, logger=None):
         if event['Action'] == 'update':
             logger.debug('Event Update : %s' % event)
             if event['Type'] == 'node':
