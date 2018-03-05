@@ -6,15 +6,18 @@ class ServiceAdapter():
     """Adapter to manage docker service
     """
 
-    def get_services(self):
+    @staticmethod
+    def get_services():
         raise NotImplemented('Method get_services not implemented')
 
-    def get_services_from_id(self):
+    @staticmethod
+    def get_services_from_id():
         raise NotImplemented('Method get_services_from_id not implemented')
 
+    @classmethod
     @inject_param('logger')
-    def _has_to_be_registred(self, labels, envs, internal_port, logger=None):
-        labels.update(self._get_envs_to_dict(envs))
+    def _has_to_be_registred(cls, labels, envs, internal_port, logger=None):
+        labels.update(cls._get_envs_to_dict(envs))
 
         if "not_register" in labels:
             if "service_%s_name" % internal_port not in labels and "service_%s_tags" % internal_port not in labels:
@@ -22,11 +25,12 @@ class ServiceAdapter():
 
         return True
 
+    @classmethod
     @inject_param('logger')
-    def _get_tags(self, labels, envs, internal_port, logger=None):
+    def _get_tags(cls, labels, envs, internal_port, logger=None):
         tags = []
         keys = ["service_tags", "service_%s_tags" % internal_port]
-        envs_dict = self._get_envs_to_dict(envs)
+        envs_dict = cls._get_envs_to_dict(envs)
 
         for key in keys:
             if key in labels:
@@ -39,10 +43,11 @@ class ServiceAdapter():
 
         return list(set(tags))
 
+    @classmethod
     @inject_param('logger')
-    def _get_name_from_label_and_envs(self, labels, envs, internal_port, logger=None):
+    def _get_name_from_label_and_envs(cls, labels, envs, internal_port, logger=None):
         keys = ['service_name', 'service_%s_name' % internal_port]
-        envs_dict = self._get_envs_to_dict(envs)
+        envs_dict = cls._get_envs_to_dict(envs)
 
         for key in keys:
             if key in labels:
@@ -53,8 +58,9 @@ class ServiceAdapter():
 
         return None
 
+    @staticmethod
     @inject_param('logger')
-    def _get_envs_to_dict(self, envs, logger=None):
+    def _get_envs_to_dict(envs, logger=None):
         envs_dict = {}
         for env in envs:
             envs_dict[env.split('=')[0].lower()] = env.split('=')[1]

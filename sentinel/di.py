@@ -10,7 +10,7 @@ def backend_adapter():
 def orchestrator_adapter():
     if os.environ.get('ORCHESTRATOR') == "swarm":
         from adapters.orchestrators.swarm import SwarmAdapter
-        return SwarmAdapter()
+        return SwarmAdapter
 
 
 def docker_adapter():
@@ -20,12 +20,12 @@ def docker_adapter():
 
 def container_adapter():
     from adapters.docker.container_adapter import ContainerAdapter
-    return ContainerAdapter()
+    return ContainerAdapter
 
 
 def swarmservice_adapter():
     from adapters.docker.swarmservice_adapter import SwarmServiceAdapter
-    return SwarmServiceAdapter()
+    return SwarmServiceAdapter
 
 
 def logger():

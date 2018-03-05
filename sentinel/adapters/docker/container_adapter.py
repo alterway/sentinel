@@ -7,8 +7,9 @@ import time
 class ContainerAdapter(ServiceAdapter):
     """ Adapter to manage docker container as service
     """
+    @classmethod
     @inject_param('docker_adapter')
-    def get_services(self, docker_adapter=None):
+    def get_services(cls, docker_adapter=None):
         services = []
         containers = [
             container
@@ -17,16 +18,18 @@ class ContainerAdapter(ServiceAdapter):
         ]
 
         for container in containers:
-            services.extend(self._get_services_object(container.id))
+            services.extend(cls._get_services_object(container.id))
 
         return services
 
-    def get_services_from_id(self, container_id):
-        return self._get_services_object(container_id)
+    @classmethod
+    def get_services_from_id(cls, container_id):
+        return cls._get_services_object(container_id)
 
+    @classmethod
     @inject_param('docker_adapter')
     @inject_param('logger')
-    def _get_services_object(self, container_id, docker_adapter=None, logger=None):
+    def _get_services_object(cls, container_id, docker_adapter=None, logger=None):
         container = docker_adapter.get_container_from_id(container_id)
         waiting = 0
         # Wait if container is not running
@@ -36,18 +39,18 @@ class ContainerAdapter(ServiceAdapter):
             waiting += 1
             container = docker_adapter.get_container_from_id(container_id)
 
-        exposed_ports = self._get_container_exposed_ports(container)
+        exposed_ports = cls._get_container_exposed_ports(container)
         container_name = container.attrs['Config']['Labels']['com.docker.compose.service'] if 'com.docker.compose.service' in container.attrs['Config']['Labels'] else container.attrs['Name'].replace('/', '')
         services = []
         if len(exposed_ports) == 0:
             logger.info('Ignored Service : %s don\'t publish port' % container_name)
         else:
             tags = ['container:%s' % container.id]
-            labels, envs = self._get_container_labels_and_vars(container)
+            labels, envs = cls._get_container_labels_and_vars(container)
             for port in exposed_ports:
-                if self._has_to_be_registred(labels, envs, port['internal_port']):
-                    tags.extend(self._get_tags(labels, envs, port['internal_port']))
-                    name = self._get_name_from_label_and_envs(labels, envs, port['internal_port'])
+                if cls._has_to_be_registred(labels, envs, port['internal_port']):
+                    tags.extend(cls._get_tags(labels, envs, port['internal_port']))
+                    name = cls._get_name_from_label_and_envs(labels, envs, port['internal_port'])
                     services.append(
                         Service(
                             name=name if name is not None else "%s-%s" % (container_name, port['internal_port']),
@@ -64,8 +67,9 @@ class ContainerAdapter(ServiceAdapter):
 
         return services
 
+    @staticmethod
     @inject_param('logger')
-    def _get_container_exposed_ports(self, container, logger=None):
+    def _get_container_exposed_ports(container, logger=None):
         ports = []
         logger.debug("NetworkSetting : %s" % container.attrs['NetworkSettings']['Ports'])
         for key in container.attrs['NetworkSettings']['Ports'].keys():
@@ -78,8 +82,9 @@ class ContainerAdapter(ServiceAdapter):
         logger.debug('ports : %s' % ports)
         return ports
 
+    @staticmethod
     @inject_param('logger')
-    def _get_container_labels_and_vars(self, container, logger=None):
+    def _get_container_labels_and_vars(container, logger=None):
         labels = container.attrs['Config']['Labels']
         logger.debug("labels : %s" % labels)
         envs = [

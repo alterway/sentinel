@@ -9,8 +9,9 @@ class SwarmServiceAdapter(ServiceAdapter):
     """ Adaper to manage docker swarm service as service
     """
 
+    @classmethod
     @inject_param('docker_adapter')
-    def get_services(self, docker_adapter=None):
+    def get_services(cls, docker_adapter=None):
         services = []
 
         # If manager get swarm services
@@ -18,35 +19,37 @@ class SwarmServiceAdapter(ServiceAdapter):
             swarm_services = docker_adapter.get_swarm_services()
 
             for service in swarm_services:
-                services.extend(self._get_services_object(service))
+                services.extend(cls._get_services_object(service))
 
         return services
 
+    @classmethod
     @inject_param('docker_adapter')
-    def get_services_from_id(self, service_id, docker_adapter=None):
+    def get_services_from_id(cls, service_id, docker_adapter=None):
         if docker_adapter.is_manager():
-            return self._get_services_object(docker_adapter.get_swarm_service_by_id(service_id))
+            return cls._get_services_object(docker_adapter.get_swarm_service_by_id(service_id))
         else:
             return []
 
+    @classmethod
     @inject_param('logger')
-    def _get_services_object(self, service, logger=None):
-        exposed_ports = self._get_service_exposed_ports(service)
+    def _get_services_object(cls, service, logger=None):
+        exposed_ports = cls._get_service_exposed_ports(service)
         services = []
         if len(exposed_ports) == 0:
             logger.info('Ignored Service : %s don\'t publish port' % service.attrs['Spec']['Name'])
         else:
-            all_nodes = self._get_nodes_for_service(service)
-            running_nodes = self._get_nodes_running_service(service)
+            all_nodes = cls._get_nodes_for_service(service)
+            running_nodes = cls._get_nodes_running_service(service)
             if len(all_nodes) == 0 and len(running_nodes) == 0:
                 logger.info('Ignored Service: %s don\'t run in available host' % service.attrs['Spec']['Name'])
             else:
                 tags = ['swarm-service:%s' % service.id]
-                labels, envs = self._get_swarm_service_labels_and_vars(service)
+                labels, envs = cls._get_swarm_service_labels_and_vars(service)
                 for port in exposed_ports:
-                    if self._has_to_be_registred(labels, envs, port['internal_port']):
-                        tags.extend(self._get_tags(labels, envs, port['internal_port']))
-                        name = self._get_name_from_label_and_envs(labels, envs, port['internal_port'])
+                    if cls._has_to_be_registred(labels, envs, port['internal_port']):
+                        tags.extend(cls._get_tags(labels, envs, port['internal_port']))
+                        name = cls._get_name_from_label_and_envs(labels, envs, port['internal_port'])
                         services.append(
                             Service(
                                 name=name if name is not None else "%s-%s" % (service.attrs['Spec']['Name'], port['external_port']),
@@ -61,8 +64,9 @@ class SwarmServiceAdapter(ServiceAdapter):
 
         return services
 
+    @staticmethod
     @inject_param('docker_adapter')
-    def _get_nodes_for_service(self, swarm_service, docker_adapter=None):
+    def _get_nodes_for_service(swarm_service, docker_adapter=None):
         result = []
 
         nodes = [node.attrs for node in docker_adapter.list_nodes()]
@@ -72,8 +76,9 @@ class SwarmServiceAdapter(ServiceAdapter):
 
         return result
 
+    @staticmethod
     @inject_param('docker_adapter')
-    def _get_nodes_running_service(self, swarm_service, docker_adapter=None):
+    def _get_nodes_running_service(swarm_service, docker_adapter=None):
         running_nodes_ids = [
             task['NodeID']
             for task in docker_adapter.get_swarm_service_tasks(swarm_service)
@@ -86,8 +91,9 @@ class SwarmServiceAdapter(ServiceAdapter):
             if node.attrs['ID'] in running_nodes_ids
         ]
 
+    @staticmethod
     @inject_param('logger')
-    def _get_service_exposed_ports(self, swarm_service, logger=None):
+    def _get_service_exposed_ports(swarm_service, logger=None):
         if 'Ports' in swarm_service.attrs['Endpoint']:
             logger.debug(': %s' % swarm_service.attrs['Endpoint']['Ports'])
 
@@ -97,8 +103,9 @@ class SwarmServiceAdapter(ServiceAdapter):
             if 'PublishedPort' in port
         ] if 'Ports' in swarm_service.attrs['Endpoint'] else []
 
+    @staticmethod
     @inject_param('logger')
-    def _get_swarm_service_labels_and_vars(self, swarm_service, logger=None):
+    def _get_swarm_service_labels_and_vars(swarm_service, logger=None):
         labels = swarm_service.attrs['Spec']['Labels']
         logger.debug("labels : %s" % labels)
         envs = [

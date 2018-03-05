@@ -9,7 +9,7 @@ class SwarmAdapter(OrchestratorAdapter):
 
     @classmethod
     @inject_param('logger')
-    def process_event(self, event, logger=None):
+    def process_event(cls, event, logger=None):
         """Function for specials docker event treatments
         """
         if event['Action'] == 'update':
@@ -18,16 +18,16 @@ class SwarmAdapter(OrchestratorAdapter):
                 attrs = event['Actor']['Attributes']
                 if 'availability.new' in attrs:
                     if attrs['availability.new'] == 'drain':
-                        SwarmAdapter._process_node_down(attrs['name'], 'drain')
+                        cls._process_node_down(attrs['name'], 'drain')
                     elif attrs['availability.new'] == 'active':
-                        self._process_node_up(attrs['name'], 'active')
+                        cls._process_node_up(attrs['name'], 'active')
                 elif 'state.new' in attrs:
                     if attrs['state.new'] == 'down':
-                        SwarmAdapter._process_node_down(attrs['name'], 'down')
+                        cls._process_node_down(attrs['name'], 'down')
                     elif attrs['state.new'] == 'ready':
-                        self._process_node_up(attrs['name'], 'ready')
+                        cls._process_node_up(attrs['name'], 'ready')
             elif event['Type'] == 'service':
-                SwarmAdapter._process_update_service(event)
+                cls._process_update_service(event)
 
     @staticmethod
     @inject_param('backend_adapter')
@@ -38,24 +38,24 @@ class SwarmAdapter(OrchestratorAdapter):
 
     @inject_param('backend_adapter')
     @inject_param('logger')
-    def _process_node_up(self, node_name, new_status, backend_adapter=None, logger=None):
+    def _process_node_up(cls, node_name, new_status, backend_adapter=None, logger=None):
         logger.info('Swarm Node %s is %s, process register services...' % (node_name, new_status))
-        for service in self.get_services():
+        for service in cls.get_services():
             backend_adapter.register_service(service)
 
     @classmethod
     @inject_param('backend_adapter')
-    def _process_update_service(self, event, backend_adapter=None):
+    def _process_update_service(cls, event, backend_adapter=None):
         time.sleep(2)
-        services = self.get_service(event)
+        services = cls.get_service(event)
         backend_adapter.remove_service_with_tag("swarm-service:%s" % event['Actor']['ID'])
         for service in services:
             backend_adapter.register_service(service)
 
-    @classmethod
+    @staticmethod
     @inject_param('container_adapter')
     @inject_param('swarmservice_adapter')
-    def get_services(self, container_adapter=None, swarmservice_adapter=None):
+    def get_services(container_adapter=None, swarmservice_adapter=None):
         """Get all running docker services, containers and swarmservices
         """
         services = []
@@ -63,10 +63,10 @@ class SwarmAdapter(OrchestratorAdapter):
         services.extend(container_adapter.get_services())
         return services
 
-    @classmethod
+    @staticmethod
     @inject_param('swarmservice_adapter')
     @inject_param('container_adapter')
-    def get_service(self, event, docker_adapter=None, swarmservice_adapter=None, container_adapter=None):
+    def get_service(event, docker_adapter=None, swarmservice_adapter=None, container_adapter=None):
         """Get services from one docker service (container or swarm service)
         """
         if event['Type'] == 'service':
@@ -76,10 +76,10 @@ class SwarmAdapter(OrchestratorAdapter):
 
         return []
 
-    @classmethod
+    @staticmethod
     @inject_param('docker_adapter')
     @inject_param('logger')
-    def get_service_tag_to_remove(self, event, docker_adapter=None, logger=None):
+    def get_service_tag_to_remove(event, docker_adapter=None, logger=None):
         """Get service tag from docker service type container or swarm service
         """
         if event['Type'] == 'service' and docker_adapter.is_manager():
