@@ -32,6 +32,8 @@ services:
     image: hub.alterway.fr/sentinel
     restart: always
     network_mode: host
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
     - consul
 ```
