@@ -3,4 +3,7 @@
 *.pyc
 *egg-info*
 .coverage
-
+*.vagrant/
+*join-swarm.cmd
+*playbook.retry
+*console.log

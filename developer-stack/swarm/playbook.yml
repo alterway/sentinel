@@ -1,0 +1,51 @@
+- hosts: all
+  sudo: true
+  gather_facts: False
+  pre_tasks:
+    - name: Install python-minimal
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      register: output
+      changed_when: output.stdout != ""
+  tasks:
+    - name: APT - Install required packages
+      apt: name={{ item }} state=present
+      with_items:
+        - language-pack-fr
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        - python-pip
+    - name: DOCKER - Add apt-key
+      apt_key: url=https://download.docker.com/linux/ubuntu/gpg state=present
+    - name: DOCKER - Add repository
+      apt_repository: repo="deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
+    - name: DOCKER - Install docker-ce
+      apt: name="docker-ce" update_cache=yes state=present
+    - name: DOCKER-COMPOSE - Install
+      pip: name=docker-compose state=present
+    - name: DOCKER - Start swarm
+      raw: "{{swarm_command[inventory_hostname]}}"
+      register: output
+      changed_when: '"This node is already part of a swarm" not in output.stdout'
+      failed_when: False
+    - name: DOCKER - Register swarm manager token
+      raw: docker swarm join-token manager > /tmp/swarm-token && sed -n '3p;4p;5p' < /tmp/swarm-token > /home/vagrant/docker-compose/join-swarm.cmd
+      when: 'inventory_hostname == "node1"'
+    - name: DOCKER - Build sentinel
+      raw: docker build --pull -t sentinel:dev .
+    - name: DOCKER-COMPOSE - start consul and sentinel containers
+      raw: docker-compose -f docker-compose/docker-compose-{{inventory_hostname}}.yml up -d
+      register: output
+      changed_when: '"is up-to-date" not in output.stdout'
+  vars:
+    - ip_addresses:
+        node1: "192.168.50.4"
+        node2: "192.168.50.5"
+        node3: "192.168.50.6"
+    - swarm_command:
+        node1: "docker swarm init --advertise-addr {{ip_addresses[inventory_hostname]}}"
+        node2: eval $(cat /home/vagrant/docker-compose/join-swarm.cmd)
+        node3: eval $(cat /home/vagrant/docker-compose/join-swarm.cmd)
+
+

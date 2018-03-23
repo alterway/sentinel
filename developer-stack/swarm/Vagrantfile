@@ -1,0 +1,46 @@
+Vagrant.require_version ">= 2.0.2"
+Vagrant.configure("2") do |config|
+
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+  end
+  config.vm.define "node1" do |node1|
+    node1.vm.box = "ubuntu/xenial64"
+    node1.vm.hostname = "node1"
+    node1.vm.network "private_network", ip: "192.168.50.4"
+    node1.vm.synced_folder "docker-compose/", "/home/vagrant/docker-compose", owner: "vagrant", group: "vagrant"
+    node1.vm.synced_folder "../../sentinel/", "/home/vagrant/sentinel", owner: "vagrant", group: "vagrant"
+
+    node1.vm.provision "file", source: "../../Dockerfile", destination: "/home/vagrant/Dockerfile"
+    node1.vm.provision "file", source: "../../setup.py", destination: "/home/vagrant/setup.py"
+    node1.vm.provision "ansible" do |ansible|
+      ansible.playbook = "playbook.yml"
+    end
+  end
+  config.vm.define "node2" do |node2|
+    node2.vm.box = "ubuntu/xenial64"
+    node2.vm.hostname = "node2"
+    node2.vm.network "private_network", ip: "192.168.50.5"
+    node2.vm.synced_folder "docker-compose/", "/home/vagrant/docker-compose", owner: "vagrant", group: "vagrant"
+    node2.vm.synced_folder "../../sentinel/", "/home/vagrant/sentinel", owner: "vagrant", group: "vagrant"
+
+    node2.vm.provision "file", source: "../../Dockerfile", destination: "/home/vagrant/Dockerfile"
+    node2.vm.provision "file", source: "../../setup.py", destination: "/home/vagrant/setup.py"
+    node2.vm.provision "ansible" do |ansible|
+      ansible.playbook = "playbook.yml"
+    end
+  end
+  config.vm.define "node3" do |node3|
+    node3.vm.box = "ubuntu/xenial64"
+    node3.vm.hostname = "node3"
+    node3.vm.network "private_network", ip: "192.168.50.6"
+    node3.vm.synced_folder "docker-compose/", "/home/vagrant/docker-compose", owner: "vagrant", group: "vagrant"
+    node3.vm.synced_folder "../../sentinel/", "/home/vagrant/sentinel", owner: "vagrant", group: "vagrant"
+
+    node3.vm.provision "file", source: "../../Dockerfile", destination: "/home/vagrant/Dockerfile"
+    node3.vm.provision "file", source: "../../setup.py", destination: "/home/vagrant/setup.py"
+    node3.vm.provision "ansible" do |ansible|
+      ansible.playbook = "playbook.yml"
+    end
+  end
+end
