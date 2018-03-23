@@ -6,7 +6,7 @@ COPY setup.py .
 
 RUN pip install -e . && rm setup.py
 
-ENV BACKEND consul
-ENV ORCHESTRATOR swarm
+ENV BACKEND="consul" \
+    ORCHESTRATOR="swarm"
 
 ENTRYPOINT ["sentinel"]

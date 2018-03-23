@@ -1,0 +1,7 @@
+sudo: required
+language: python
+services:
+  - docker
+
+script:
+  - ./quality_wrapper

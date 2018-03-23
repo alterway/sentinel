@@ -1,0 +1,7 @@
+FROM sentinel:dev
+
+WORKDIR /usr/local/lib/python3.6/site-packages
+COPY quality.py /usr/local/lib/python3.6/site-packages/quality.py
+COPY setup.py /usr/local/lib/python3.6/site-packages/setup.py
+
+RUN python quality.py
