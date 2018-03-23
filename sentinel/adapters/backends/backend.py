@@ -1,13 +1,19 @@
-from exceptions import NotImplemented
+from utils.dependencies_injection import inject_param
 
 
 class BackendAdapter():
 
-    def get_services(self):
-        raise NotImplemented("The method get_services() is not implemented for this backend")
+    @classmethod
+    @inject_param("not_implemented")
+    def get_services(cls, not_implemented=None):
+        not_implemented(cls.__class__.__name__)
 
-    def register_service(self):
-        raise NotImplemented("The method register_service() is not implemented for this backend")
+    @classmethod
+    @inject_param("not_implemented")
+    def register_service(cls, not_implemented=None):
+        not_implemented(cls.__class__.__name__)
 
-    def deregister_node(self):
-        raise NotImplemented('Method deregister_node not implemented')
+    @classmethod
+    @inject_param("not_implemented")
+    def deregister_node(cls, not_implemented=None):
+        not_implemented(cls.__class__.__name__)
