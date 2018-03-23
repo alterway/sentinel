@@ -1,6 +1,8 @@
-class NotImplemented(Exception):
-    def __init__(self, message):
-        self.message = message
+class NotImplementedException(NotImplementedError):
+    def __init__(self, method, class_name):
+        self.message = "Methode %s is not implemented for %s" % (
+            method, class_name
+        )
 
 
 class BackendAdapterNotKnown(Exception):
@@ -11,3 +13,8 @@ class BackendAdapterNotKnown(Exception):
 class OrchestratorAdapterNotKnown(Exception):
     def __init__(self, orchestrator):
         self.message = 'Orchestrator adapter doesn\'t exists : %s' % orchestrator
+
+
+def not_implemented(class_name):
+    import inspect
+    raise NotImplementedException(inspect.stack()[1][3], class_name)

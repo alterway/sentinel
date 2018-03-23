@@ -1,18 +1,20 @@
-from exceptions import NotImplemented
 from utils.dependencies_injection import inject_param
+import re
 
 
 class ServiceAdapter():
     """Adapter to manage docker service
     """
 
-    @staticmethod
-    def get_services():
-        raise NotImplemented('Method get_services not implemented')
+    @classmethod
+    @inject_param("not_implemented")
+    def get_services(cls, not_implemented=None):
+        not_implemented(cls.__class__.__name__)
 
-    @staticmethod
-    def get_services_from_id():
-        raise NotImplemented('Method get_services_from_id not implemented')
+    @classmethod
+    @inject_param("not_implemented")
+    def get_services_from_id(cls, not_implemented=None):
+        not_implemented(cls.__class__.__name__)
 
     @classmethod
     @inject_param('logger')
@@ -51,10 +53,10 @@ class ServiceAdapter():
 
         for key in keys:
             if key in labels:
-                return labels[key]
+                return cls._trim_service_name(labels[key])
 
             if key in envs_dict:
-                return envs_dict[key]
+                return cls._trim_service_name(envs_dict[key])
 
         return None
 
@@ -67,3 +69,7 @@ class ServiceAdapter():
 
         logger.debug("envs : %s" % envs_dict)
         return envs_dict
+
+    @staticmethod
+    def _trim_service_name(service_name):
+        return re.sub('[^A-Za-z0-9---_.]+', '', service_name).replace('_', '-')

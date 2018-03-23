@@ -1,22 +1,25 @@
-from exceptions import NotImplemented
+from utils.dependencies_injection import inject_param
 
 
 class OrchestratorAdapter():
     """Interface to create orchestrator adapters
     """
+    @classmethod
+    @inject_param("not_implemented")
+    def process_event(cls, not_implemented=None):
+        not_implemented(cls.__class__.__name__)
 
-    @staticmethod
-    def process_event(event):
-        raise NotImplemented('Method process_event() not implemented')
+    @classmethod
+    @inject_param("not_implemented")
+    def get_services(cls, not_implemented=None):
+        not_implemented(cls.__class__.__name__)
 
-    @staticmethod
-    def get_services():
-        raise NotImplemented('Method get_services() not implemented')
+    @classmethod
+    @inject_param("not_implemented")
+    def get_service(cls, not_implemented=None):
+        not_implemented(cls.__class__.__name__)
 
-    @staticmethod
-    def get_service():
-        raise NotImplemented('Method get_service() not implemented')
-
-    @staticmethod
-    def get_service_tag_to_remove():
-        raise NotImplemented('Method get_service_tag_to_remove() not implemented')
+    @classmethod
+    @inject_param("not_implemented")
+    def get_service_tag_to_remove(cls, not_implemented=None):
+        not_implemented(cls.__class__.__name__)
