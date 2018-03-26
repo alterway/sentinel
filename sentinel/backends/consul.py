@@ -1,14 +1,16 @@
+from backends.backend import Backend
+from models import Service, Node
+from utils.dependencies_injection import inject_param
 import os
 import requests
 import json
-from adapters.backends.backend import BackendAdapter
-from models import Service, Node
-from utils.dependencies_injection import inject_param
 
 
-class ConsulAdapter(BackendAdapter):
+class Consul(Backend):
     def __init__(self):
-        self.address = os.environ.get('CONSUL_ADDRESS') if os.environ.get('CONSUL_ADDRESS') is not None else "http://127.0.0.1:8500"
+        self.address = os.environ.get(
+            'CONSUL_ADDRESS'
+        ) if os.environ.get('CONSUL_ADDRESS') is not None else "http://127.0.0.1:8500"
 
     @inject_param('docker_adapter')
     @inject_param('logger')
@@ -43,17 +45,21 @@ class ConsulAdapter(BackendAdapter):
 
     @inject_param("logger")
     def register_service(self, service, logger=None):
+        logger.debug("CONSUL - service to register: %s" % service.name)
+        logger.debug("CONSUL - service to register for nodes : %s" % [node.address for node in service.nodes])
         for node in service.nodes:
             payload = {
                 "ID": "%s-%s" % (service.name, node.name.split('.')[0]),
                 "Name": service.name,
                 "Tags": service.tags,
                 "Address": node.address,
-                "Port": service.port
+                "Port": service.port,
+                "EnableTagOverride": True
             }
 
             logger.debug('Ask for register service %s : %s %s:%s' % (service.name, node.name, node.address, service.port))
-            response = requests.put('http://%s:8500/v1/agent/service/register' % node.address, data=json.dumps(payload))
+            logger.debug('Payload : %s' % payload)
+            response = requests.put('%s/v1/agent/service/register' % self.address, data=json.dumps(payload))
 
             if response.status_code == 200:
                 logger.info("Register Service : %s - %s %s:%s" % (service.name, node.name, node.address, service.port))
@@ -88,7 +94,7 @@ class ConsulAdapter(BackendAdapter):
 
         for node in service.nodes:
             logger.debug("Process node %s to deregister service" % node.name)
-            response = requests.put('http://%s:8500/v1/agent/service/deregister/%s-%s' % (node.address, service.name, node.name.split('.')[0]))
+            response = requests.put('%s/v1/agent/service/deregister/%s' % (self.address, service.name))
 
             if response.status_code == 200:
                 logger.info('Deregister Service : %s - %s' % (service.name, node.name))

@@ -1,10 +1,10 @@
 from utils.dependencies_injection import inject_param
-from adapters.docker.service_adapter import ServiceAdapter
+from services_adapters.service_adapter import ServiceAdapter
 from models import Service, Node
 import time
 
 
-class ContainerAdapter(ServiceAdapter):
+class Container(ServiceAdapter):
     """ Adapter to manage docker container as service
     """
     @classmethod

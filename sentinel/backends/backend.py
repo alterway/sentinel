@@ -1,7 +1,7 @@
 from utils.dependencies_injection import inject_param
 
 
-class BackendAdapter():
+class Backend():
 
     @classmethod
     @inject_param("not_implemented")

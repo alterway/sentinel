@@ -1,11 +1,9 @@
-from adapters.docker.service_adapter import ServiceAdapter
-
+from utils.dependencies_injection import inject_param
+from services_adapters.service_adapter import ServiceAdapter
 from models import Node, Service
 
-from utils.dependencies_injection import inject_param
 
-
-class SwarmServiceAdapter(ServiceAdapter):
+class SwarmService(ServiceAdapter):
     """ Adaper to manage docker swarm service as service
     """
 

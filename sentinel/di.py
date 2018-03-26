@@ -1,31 +1,37 @@
 import os
+import importlib
 
 
 def backend_adapter():
-    if os.environ.get('BACKEND') == "consul":
-        from adapters.backends.consul import ConsulAdapter
-        return ConsulAdapter()
+    backend = os.environ.get("BACKEND") if os.environ.get("BACKEND") else "consul"
+    backend_class = getattr(
+        importlib.import_module('backends.%s' % backend),
+        backend.capitalize()
+    )
+    return backend_class()
 
 
 def orchestrator_adapter():
-    if os.environ.get('ORCHESTRATOR') == "swarm":
-        from adapters.orchestrators.swarm import SwarmAdapter
-        return SwarmAdapter
+    orchestrator = os.environ.get("ORCHESTRATOR") if os.environ.get("ORCHESTRATOR") else "swarm"
+    return getattr(
+        importlib.import_module('orchestrators.%s' % orchestrator),
+        orchestrator.capitalize()
+    )
 
 
 def docker_adapter():
-    from adapters.docker.docker_adapter import DockerAdapter
+    from services_adapters.docker_adapter import DockerAdapter
     return DockerAdapter()
 
 
 def container_adapter():
-    from adapters.docker.container_adapter import ContainerAdapter
-    return ContainerAdapter
+    from services_adapters.container import Container
+    return Container
 
 
 def swarmservice_adapter():
-    from adapters.docker.swarmservice_adapter import SwarmServiceAdapter
-    return SwarmServiceAdapter
+    from services_adapters.swarmservice import SwarmService
+    return SwarmService
 
 
 def logger():

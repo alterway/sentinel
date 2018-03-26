@@ -1,13 +1,9 @@
-import unittest
-
-from adapters.docker.docker_adapter import DockerAdapter
-from adapters.docker.swarmservice_adapter import SwarmServiceAdapter
-
-from mock import patch
-
-from models import Node, Service
-
+from services_adapters.docker_adapter import DockerAdapter
+from services_adapters.swarmservice import SwarmService as SwarmServiceAdapter
 from utils.test_utilities import SwarmNode, SwarmService
+from models import Node, Service
+from mock import patch
+import unittest
 
 
 class TestSwarmServiceAdapter(unittest.TestCase):

@@ -1,12 +1,12 @@
 from utils.dependencies_injection import inject_param
 
 
-class OrchestratorAdapter():
+class Orchestrator():
     """Interface to create orchestrator adapters
     """
     @classmethod
     @inject_param("not_implemented")
-    def process_event(cls, not_implemented=None):
+    def listen_events(cls, not_implemented=None):
         not_implemented(cls.__class__.__name__)
 
     @classmethod

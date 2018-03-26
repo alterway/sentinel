@@ -1,6 +1,6 @@
-import unittest
-from adapters.docker.service_adapter import ServiceAdapter
+from services_adapters.service_adapter import ServiceAdapter
 from exceptions import NotImplementedException
+import unittest
 
 
 class TestServiceAdapter(unittest.TestCase):

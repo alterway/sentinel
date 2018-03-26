@@ -1,16 +1,16 @@
+from backends.consul import Consul
+from services_adapters.docker_adapter import DockerAdapter
+from utils.test_utilities import StubResponse
 import unittest
 from mock import patch
 import requests
 from models import Service, Node
-from adapters.backends.consul import ConsulAdapter
-from adapters.docker.docker_adapter import DockerAdapter
-from utils.test_utilities import StubResponse
 
 
 class TestConsul(unittest.TestCase):
 
     def setUp(self):
-        self.consul_adapter = ConsulAdapter()
+        self.consul_adapter = Consul()
 
     @patch.object(requests, 'get', side_effect=[
         StubResponse(

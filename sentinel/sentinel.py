@@ -1,27 +1,5 @@
 from utils.dependencies_injection import inject_param
 from utils.logger import set_logging
-import docker
-from datetime import datetime
-
-
-@inject_param('backend_adapter')
-@inject_param('orchestrator_adapter')
-@inject_param('logger')
-def process_event(event, backend_adapter=None, orchestrator_adapter=None, logger=None):
-    if event['Action'] == 'create':
-        # Ajout du service créé
-        logger.debug("Get event create : %s" % event)
-        services = orchestrator_adapter.get_service(event)
-        for service in services:
-            backend_adapter.register_service(service)
-    elif event['Action'] == 'remove' or event['Action'] == 'kill':
-        # Suppression du service
-        logger.debug("Get event remove : %s" % event)
-        tag_to_remove_on_backend = orchestrator_adapter.get_service_tag_to_remove(event)
-        if tag_to_remove_on_backend is not None:
-            backend_adapter.remove_service_with_tag(tag_to_remove_on_backend)
-    else:
-        orchestrator_adapter.process_event(event)
 
 
 @inject_param('backend_adapter')
@@ -48,12 +26,10 @@ def sync(backend_adapter=None, orchestrator_adapter=None, logger=None):
     logger.info("Synchonisation is done")
 
 
+@inject_param("orchestrator_adapter")
 @inject_param("logger")
-def listen_events(logger=None):
-    logger.info("Listen docker events...")
-    client = docker.DockerClient(base_url='unix://var/run/docker.sock', version='auto')
-    for event in client.events(since=datetime.utcnow(), decode=True):
-        process_event(event)
+def listen_events(orchestrator_adapter=None, logger=None):
+    orchestrator_adapter.listen_events()
 
 
 def main():

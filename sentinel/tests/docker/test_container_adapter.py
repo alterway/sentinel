@@ -1,8 +1,8 @@
-import unittest
-from adapters.docker.container_adapter import ContainerAdapter
-from adapters.docker.docker_adapter import DockerAdapter
-from mock import patch
+from services_adapters.container import Container as ContainerAdapter
+from services_adapters.docker_adapter import DockerAdapter
 from utils.test_utilities import Container
+from mock import patch
+import unittest
 
 
 class TestContainerAdapter(unittest.TestCase):

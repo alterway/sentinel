@@ -1,12 +1,12 @@
 import unittest
-from adapters.backends.backend import BackendAdapter
+from backends.backend import Backend
 from exceptions import NotImplementedException
 
 
 class TestOrchestrator(unittest.TestCase):
     def setUp(self):
 
-        class NewBackend(BackendAdapter):
+        class NewBackend(Backend):
             def __init__(self):
                 pass
 

@@ -1,22 +1,22 @@
-import unittest
-from adapters.orchestrators.orchestrator import OrchestratorAdapter
+from orchestrators.orchestrator import Orchestrator
 from exceptions import NotImplementedException
+import unittest
 
 
 class TestOrchestrator(unittest.TestCase):
     def setUp(self):
 
-        class NewOrchestrator(OrchestratorAdapter):
+        class NewOrchestrator(Orchestrator):
             def __init__(self):
                 pass
 
         self.orchestrator = NewOrchestrator()
 
-    def test_process_event_not_implemented(self):
+    def test_listen_events_not_implemented(self):
         with self.assertRaises(NotImplementedException) as e:
-            self.orchestrator.process_event()
+            self.orchestrator.listen_events()
             self.assertEquals(
-                "Methode process_event is not implemented for NewOrchestrator",
+                "Methode listen_events is not implemented for NewOrchestrator",
                 e.message
             )
 
