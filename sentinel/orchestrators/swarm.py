@@ -8,11 +8,11 @@ class Swarm(Orchestrator):
     """ This class permit to get services in swarm cluster
     """
     @classmethod
-    @inject_param("docker_adapter")
+    @inject_param("swarm_adapter")
     @inject_param("logger")
-    def listen_events(cls, docker_adapter=None, logger=None):
+    def listen_events(cls, swarm_adapter=None, logger=None):
         logger.info("Listen docker events...")
-        client = docker_adapter.get_docker_socket()
+        client = swarm_adapter.get_docker_socket()
         for event in client.events(since=datetime.utcnow(), decode=True):
             cls._process_event(event)
 
@@ -30,7 +30,7 @@ class Swarm(Orchestrator):
     @staticmethod
     @inject_param('swarmservice_adapter')
     @inject_param('container_adapter')
-    def get_service(event, docker_adapter=None, swarmservice_adapter=None, container_adapter=None):
+    def get_service(event, swarm_adapter=None, swarmservice_adapter=None, container_adapter=None):
         """Get services from one docker service (container or swarm service)
         """
         if event['Type'] == 'service':
@@ -41,12 +41,12 @@ class Swarm(Orchestrator):
         return []
 
     @staticmethod
-    @inject_param('docker_adapter')
+    @inject_param('swarm_adapter')
     @inject_param('logger')
-    def get_service_tag_to_remove(event, docker_adapter=None, logger=None):
+    def get_service_tag_to_remove(event, swarm_adapter=None, logger=None):
         """Get service tag from docker service type container or swarm service
         """
-        if event['Type'] == 'service' and docker_adapter.is_manager():
+        if event['Type'] == 'service' and swarm_adapter.is_manager():
             return 'swarm-service:%s' % event['Actor']['ID']
         elif event['Type'] == 'container' and 'com.docker.swarm.service.name' not in event['Actor']['Attributes']:
             return 'container:%s' % event['Actor']['ID']
@@ -116,11 +116,17 @@ class Swarm(Orchestrator):
         logger.info('Swarm Node %s is %s, deregister this node in backend...' % (node_name, new_status))
         backend_adapter.deregister_node(node_name)
 
+    @classmethod
     @inject_param('backend_adapter')
     @inject_param('logger')
     def _process_node_up(cls, node_name, new_status, backend_adapter=None, logger=None):
         logger.info('Swarm Node %s is %s, process register services...' % (node_name, new_status))
         for service in cls.get_services():
+            service.nodes = [
+                node
+                for node in service.nodes
+                if node.name == node_name
+            ]
             backend_adapter.register_service(service)
 
     @classmethod

@@ -2,7 +2,7 @@ from utils.dependencies_injection import inject_param
 import re
 
 
-class ServiceAdapter():
+class ServiceBase():
     """Adapter to manage docker service
     """
 

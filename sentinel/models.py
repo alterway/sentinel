@@ -1,3 +1,6 @@
+from exceptions import InvalidIPAddress
+import ipaddress
+
 
 class Service(object):
     def __init__(self, name, port=None, tags=[], nodes=[]):
@@ -9,5 +12,8 @@ class Service(object):
 
 class Node(object):
     def __init__(self, name, address):
+        if address == '0.0.0.0':
+            raise InvalidIPAddress(address)
+
         self.name = name
-        self.address = address
+        self.address = ipaddress.ip_address(address)

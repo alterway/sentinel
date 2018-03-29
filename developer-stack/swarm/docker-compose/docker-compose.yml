@@ -8,7 +8,7 @@ services:
       - target: 8500
         published: 8500
         protocol: tcp
-        mode: ingress
+        mode: host
     networks:
       - consul
     volumes:
@@ -16,6 +16,8 @@ services:
     environment:
       - CONSUL_BIND_INTERFACE=eth0
     deploy:
+      labels:
+        not_register: 1
       restart_policy:
         condition: on-failure
       placement:
@@ -24,7 +26,12 @@ services:
 
   consul-slave1:
     image: consul
-    command: agent -join consul-bootstrap -domain vagrant.dev -node=node2 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    command: agent -server -join consul-bootstrap -domain vagrant.dev -node=node2 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
     networks:
       - consul
     volumes:
@@ -32,6 +39,8 @@ services:
     environment:
       - CONSUL_BIND_INTERFACE=eth0
     deploy:
+      labels:
+        not_register: 1
       restart_policy:
         condition: on-failure
       placement:
@@ -40,7 +49,12 @@ services:
 
   consul-slave2:
     image: consul
-    command: agent -join consul-bootstrap -domain vagrant.dev -node=node3 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    command: agent -server -join consul-bootstrap -domain vagrant.dev -node=node3 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
     networks:
       - consul
     volumes:
@@ -48,11 +62,36 @@ services:
     environment:
       - CONSUL_BIND_INTERFACE=eth0
     deploy:
+      labels:
+        not_register: 1
       restart_policy:
         condition: on-failure
       placement:
         constraints:
           - node.hostname == node3
+
+  consul-slave3:
+    image: consul
+    command: agent -join consul-bootstrap -domain vagrant.dev -node=node4 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
+    networks:
+      - consul
+    volumes:
+      - consul-data:/consul/data
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    deploy:
+      labels:
+        not_register: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == node4
 
   sentinel-swarmmanager1:
     image: sentinel:dev
@@ -102,21 +141,21 @@ services:
         constraints:
           - node.hostname == node3
 
-  sentinel-worker:
+  sentinel-worker1:
     image: sentinel:dev
     networks:
       - consul
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - CONSUL_ADDRESS=http://consul-bootstrap:8500
+      - CONSUL_ADDRESS=http://consul-slave3:8500
     deploy:
       mode: global
       restart_policy:
         condition: on-failure
       placement:
         constraints:
-          - node.role == worker
+          - node.hostname == node4
 
 
 volumes:

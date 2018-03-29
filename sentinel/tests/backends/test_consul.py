@@ -1,5 +1,5 @@
 from backends.consul import Consul
-from services_adapters.docker_adapter import DockerAdapter
+from docker_adapters.docker_adapter import DockerAdapter
 from utils.test_utilities import StubResponse
 import unittest
 from mock import patch

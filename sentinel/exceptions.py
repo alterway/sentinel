@@ -15,6 +15,11 @@ class OrchestratorAdapterNotKnown(Exception):
         self.message = 'Orchestrator adapter doesn\'t exists : %s' % orchestrator
 
 
+class InvalidIPAddress(Exception):
+    def __init__(self, address):
+        self.message = 'IP %s is not a valid ip address' % address
+
+
 def not_implemented(class_name):
     import inspect
     raise NotImplementedException(inspect.stack()[1][3], class_name)

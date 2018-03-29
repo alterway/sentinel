@@ -4,6 +4,7 @@ from utils.dependencies_injection import inject_param
 import os
 import requests
 import json
+import time
 
 
 class Consul(Backend):
@@ -52,19 +53,38 @@ class Consul(Backend):
                 "ID": "%s-%s" % (service.name, node.name.split('.')[0]),
                 "Name": service.name,
                 "Tags": service.tags,
-                "Address": node.address,
+                "Address": str(node.address),
                 "Port": service.port,
                 "EnableTagOverride": True
             }
 
             logger.debug('Ask for register service %s : %s %s:%s' % (service.name, node.name, node.address, service.port))
             logger.debug('Payload : %s' % payload)
-            response = requests.put('%s/v1/agent/service/register' % self.address, data=json.dumps(payload))
 
-            if response.status_code == 200:
-                logger.info("Register Service : %s - %s %s:%s" % (service.name, node.name, node.address, service.port))
+            attempt = 0
+            passed = False
+            while attempt < 10 and not passed:
+                try:
+                    response = requests.put(
+                        'http://%s:8500/v1/agent/service/register' % node.address,
+                        data=json.dumps(payload)
+                    )
+                    passed = True
+                except requests.exceptions.ConnectionError:
+                    logger.error("Can't connect to consul address: http://%s:8500" % node.address)
+                    attempt += 1
+                    time.sleep(1)  # Wait one second before retry
+
+            if response and response.status_code == 200:
+                logger.info("Register Service : %s - %s %s:%s" % (
+                    service.name, node.name, node.address, service.port)
+                )
             else:
-                logger.error("Failed to register service %s for node %s : %s" % (service.name, node.name, response.content))
+                logger.error(
+                    "Failed to register service %s for node %s : %s" % (
+                        service.name, node.name, response.content
+                    )
+                )
 
     @inject_param("logger")
     def remove_service_with_tag(self, tag, logger=None):
@@ -94,7 +114,7 @@ class Consul(Backend):
 
         for node in service.nodes:
             logger.debug("Process node %s to deregister service" % node.name)
-            response = requests.put('%s/v1/agent/service/deregister/%s' % (self.address, service.name))
+            response = requests.put('http://%s:8500/v1/agent/service/deregister/%s' % (node.address, service.name))
 
             if response.status_code == 200:
                 logger.info('Deregister Service : %s - %s' % (service.name, node.name))

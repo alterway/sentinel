@@ -20,23 +20,56 @@ def orchestrator_adapter():
 
 
 def docker_adapter():
-    from services_adapters.docker_adapter import DockerAdapter
-    return DockerAdapter()
+    from docker_adapters.docker_adapter import DockerAdapter
+
+    if os.environ.get('TESTING_MODE'):
+        docker_version = os.environ.get('TESTED_DOCKER_VERSION')
+    else:
+        docker_version = DockerAdapter.get_version()
+
+    try:
+        return getattr(
+            importlib.import_module('docker_adapters.docker_%s' % docker_version),
+            'DockerVersionAdapter'
+        )
+    except Exception:
+        return DockerAdapter
+
+
+def swarm_adapter():
+    from docker_adapters.swarm_adapter import SwarmAdapter
+
+    if os.environ.get('TESTING_MODE'):
+        docker_version = os.environ.get('TESTED_DOCKER_VERSION')
+    else:
+        docker_version = SwarmAdapter.get_version()
+
+    try:
+        return getattr(
+            importlib.import_module('docker_adapters.swarm_%s' % docker_version),
+            'SwarmVersionAdapter'
+        )
+    except Exception:
+        return SwarmAdapter
 
 
 def container_adapter():
-    from services_adapters.container import Container
+    from service.container import Container
     return Container
 
 
 def swarmservice_adapter():
-    from services_adapters.swarmservice import SwarmService
+    from service.swarmservice import SwarmService
     return SwarmService
 
 
 def logger():
     import logging
-    return logging.getLogger('STDOUT')
+    logger = logging.getLogger('STDOUT')
+    if os.environ.get('TESTING_MODE'):
+        logger.setLevel('CRITICAL')
+
+    return logger
 
 
 def not_implemented():
@@ -48,6 +81,7 @@ DEPENDENCIES = {
     "backend_adapter": backend_adapter,
     "orchestrator_adapter": orchestrator_adapter,
     "docker_adapter": docker_adapter,
+    "swarm_adapter": swarm_adapter,
     "container_adapter": container_adapter,
     "swarmservice_adapter": swarmservice_adapter,
     "not_implemented": not_implemented,

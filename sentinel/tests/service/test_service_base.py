@@ -1,11 +1,11 @@
-from services_adapters.service_adapter import ServiceAdapter
+from service.service_base import ServiceBase
 from exceptions import NotImplementedException
 import unittest
 
 
-class TestServiceAdapter(unittest.TestCase):
+class TestServiceBase(unittest.TestCase):
     def setUp(self):
-        class NewServiceAdapter(ServiceAdapter):
+        class NewServiceAdapter(ServiceBase):
             def __init__(self):
                 pass
 

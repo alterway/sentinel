@@ -1,7 +1,7 @@
 from orchestrators.swarm import Swarm
-from services_adapters.docker_adapter import DockerAdapter
-from services_adapters.container import Container
-from services_adapters.swarmservice import SwarmService
+from docker_adapters.swarm_adapter import SwarmAdapter
+from service.container import Container
+from service.swarmservice import SwarmService
 from backends.consul import Consul
 from models import Service, Node
 from mock import patch
@@ -12,8 +12,8 @@ class TestSwarm(unittest.TestCase):
     def setUp(self):
         self.swarm_adapter = Swarm()
 
-    @patch.object(DockerAdapter, 'is_manager', return_value=True)
-    @patch.object(DockerAdapter, 'get_swarm_services', return_value=['service1'])
+    @patch.object(SwarmAdapter, 'is_manager', return_value=True)
+    @patch.object(SwarmAdapter, 'get_swarm_services', return_value=['service1'])
     @patch.object(SwarmService, '_get_services_object', side_effect=[
         [
             Service(
@@ -46,8 +46,8 @@ class TestSwarm(unittest.TestCase):
         mock_get_services.assert_called_once()
         self.assertEqual(2, len(services))
 
-    @patch.object(DockerAdapter, 'is_manager', return_value=False)
-    @patch.object(DockerAdapter, 'get_swarm_services', return_value=None)
+    @patch.object(SwarmAdapter, 'is_manager', return_value=False)
+    @patch.object(SwarmAdapter, 'get_swarm_services', return_value=None)
     @patch.object(SwarmService, '_get_services_object', return_value=None)
     @patch.object(Container, 'get_services', return_value=[
         Service(
@@ -153,7 +153,7 @@ class TestSwarm(unittest.TestCase):
         mock_remove_service.assert_called_once()
         self.assertEqual(2, mock_register_service.call_count)
 
-    @patch.object(DockerAdapter, 'is_manager', return_value=None)
+    @patch.object(SwarmAdapter, 'is_manager', return_value=None)
     @patch.object(SwarmService, '_get_services_object', return_value=None)
     @patch.object(Container, '_get_services_object', side_effect=[
         [
@@ -179,7 +179,7 @@ class TestSwarm(unittest.TestCase):
         mock_is_manager.assert_not_called()
         self.assertEqual(1, len(services))
 
-    @patch.object(DockerAdapter, 'is_manager', return_value=False)
+    @patch.object(SwarmAdapter, 'is_manager', return_value=False)
     @patch.object(SwarmService, '_get_services_object', return_value=None)
     @patch.object(Container, '_get_services_object', return_value=None)
     def test_get_service_no_manager(self, mock_get_services_object_from_container, mock_get_services_object, mock_is_manager):
@@ -189,7 +189,7 @@ class TestSwarm(unittest.TestCase):
         mock_get_services_object_from_container.assert_not_called()
         self.assertEqual(0, len(services))
 
-    @patch.object(DockerAdapter, 'is_manager', return_value=True)
+    @patch.object(SwarmAdapter, 'is_manager', return_value=True)
     def test_get_service_tag_to_remove(self, mock_is_manager):
         tag = self.swarm_adapter.get_service_tag_to_remove(
             {
@@ -200,7 +200,7 @@ class TestSwarm(unittest.TestCase):
 
         self.assertEqual('swarm-service:92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04', tag)
 
-    @patch.object(DockerAdapter, 'is_manager', return_value=True)
+    @patch.object(SwarmAdapter, 'is_manager', return_value=True)
     def test_get_service_tag_to_remove_container(self, mock_is_manager):
         tag = self.swarm_adapter.get_service_tag_to_remove(
             {
@@ -214,7 +214,7 @@ class TestSwarm(unittest.TestCase):
 
         self.assertEqual('container:92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04', tag)
 
-    @patch.object(DockerAdapter, 'is_manager', return_value=False)
+    @patch.object(SwarmAdapter, 'is_manager', return_value=False)
     def test_get_service_tag_to_remove_container_no_manager(self, mock_is_manager):
         tag = self.swarm_adapter.get_service_tag_to_remove(
             {
