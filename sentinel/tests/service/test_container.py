@@ -1,5 +1,6 @@
 from service.container import Container as ContainerAdapter
 from docker_adapters.docker_adapter import DockerAdapter
+from docker_adapters.swarm_adapter import SwarmAdapter
 from utils.test_utilities import Container
 from mock import patch
 import unittest
@@ -24,8 +25,8 @@ class TestContainerAdapter(unittest.TestCase):
     ))
     @patch.object(DockerAdapter, 'get_container_exposed_ports', return_value=[{'internal_port': 80, 'external_port': 3000}, {'internal_port': 443, 'external_port': 30001}])
     @patch.object(DockerAdapter, 'get_container_labels_and_vars', return_value=[{"service_80_tags": 'http'}, ['service_80_name=toto', 'not_register=1']])
-    @patch.object(DockerAdapter, 'get_local_node_name', return_value='node1')
-    @patch.object(DockerAdapter, 'get_local_node_address', return_value='192.168.50.4')
+    @patch.object(SwarmAdapter, 'get_local_node_name', return_value='node1')
+    @patch.object(SwarmAdapter, 'get_local_node_address', return_value='192.168.50.4')
     def test_get_services_object(self, mock_get_local_node_address, mock_get_local_node_name, mock__get_container_labels_and_vars, mock_get_container_exposed_ports, mock_get_container_from_id):
         services = self.container_adapter._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
         mock_get_container_from_id.assert_called_once()
@@ -69,8 +70,8 @@ class TestContainerAdapter(unittest.TestCase):
     ])
     @patch.object(DockerAdapter, 'get_container_exposed_ports', return_value=[{'internal_port': 80, 'external_port': 3000}])
     @patch.object(DockerAdapter, 'get_container_labels_and_vars', return_value=[{"service_tags": 'http,https'}, ['service_name=toto']])
-    @patch.object(DockerAdapter, 'get_local_node_name', return_value='node1')
-    @patch.object(DockerAdapter, 'get_local_node_address', return_value='192.168.50.4')
+    @patch.object(SwarmAdapter, 'get_local_node_name', return_value='node1')
+    @patch.object(SwarmAdapter, 'get_local_node_address', return_value='192.168.50.4')
     def test_get_services_object_not_running_first_time(self, mock_get_local_node_address, mock_get_local_node_name, mock__get_container_labels_and_vars, mock_get_container_exposed_ports, mock_get_container_from_id):
         services = self.container_adapter._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
         self.assertEqual(2, mock_get_container_from_id.call_count)
@@ -122,8 +123,8 @@ class TestContainerAdapter(unittest.TestCase):
         Container(id='987654321', attrs={'Name': 'c2', 'State': {'Status': 'running'}, 'Config': {'Labels': {}}, "NetworkSettings": {"Ports": {"80/tcp": [{"HostPort": '3001'}]}}}),
         Container(id='789123456', attrs={'Name': 'c3', 'State': {'Status': 'running'}, 'Config': {'Labels': {}}, "NetworkSettings": {"Ports": {"80/tcp": [{"HostPort": '3002'}]}}})
     ])
-    @patch.object(DockerAdapter, 'get_local_node_name', return_value='node1')
-    @patch.object(DockerAdapter, 'get_local_node_address', return_value='192.168.50.4')
+    @patch.object(SwarmAdapter, 'get_local_node_name', return_value='node1')
+    @patch.object(SwarmAdapter, 'get_local_node_address', return_value='192.168.50.4')
     def test_get_services(self, mock_get_node_address, mock_get_node_name, mock_get_container_from_id, mock_list_containers):
         self.assertEqual(3, len(self.container_adapter.get_services()))
         mock_list_containers.assert_called_once()

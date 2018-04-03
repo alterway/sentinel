@@ -22,6 +22,9 @@ def orchestrator_adapter():
 def docker_adapter():
     from docker_adapters.docker_adapter import DockerAdapter
 
+    if os.environ.get('ORCHESTRATOR') == 'swarm':
+        return swarm_adapter()
+
     if os.environ.get('TESTING_MODE'):
         docker_version = os.environ.get('TESTED_DOCKER_VERSION')
     else:
