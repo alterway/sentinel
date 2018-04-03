@@ -1,5 +1,6 @@
 - hosts: all
-  sudo: true
+  become: yes
+  become_user: root
   gather_facts: False
   pre_tasks:
     - name: Install python-minimal
@@ -17,8 +18,10 @@
         - software-properties-common
         - python-pip
     - name: DOCKER - Add apt-key
+      become_method: su
       apt_key: url=https://download.docker.com/linux/ubuntu/gpg state=present
     - name: DOCKER - Add repository
+      become_method: su
       apt_repository: repo="deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
     - name: DOCKER - Install docker-ce
       apt: name="docker-ce" update_cache=yes state=present
@@ -30,14 +33,10 @@
       changed_when: '"This node is already part of a swarm" not in output.stdout'
       failed_when: False
     - name: DOCKER - Register swarm manager token
-      raw: docker swarm join-token manager > /tmp/swarm-token && sed -n '3p;4p;5p' < /tmp/swarm-token > /home/vagrant/docker-compose/join-swarm.cmd
+      raw: docker swarm join-token manager > /tmp/swarm-token && sed -n '3p;4p;5p' < /tmp/swarm-token > /home/vagrant/swarm/join-swarm.cmd
       when: 'inventory_hostname == "node1"'
     - name: DOCKER - Build sentinel
       raw: docker build --pull -t sentinel:dev .
-    - name: DOCKER-COMPOSE - start consul and sentinel containers
-      raw: docker-compose -f docker-compose/docker-compose-{{inventory_hostname}}.yml up -d
-      register: output
-      changed_when: '"is up-to-date" not in output.stdout'
   vars:
     - ip_addresses:
         node1: "192.168.50.4"
@@ -45,7 +44,16 @@
         node3: "192.168.50.6"
     - swarm_command:
         node1: "docker swarm init --advertise-addr {{ip_addresses[inventory_hostname]}}"
-        node2: eval $(cat /home/vagrant/docker-compose/join-swarm.cmd)
-        node3: eval $(cat /home/vagrant/docker-compose/join-swarm.cmd)
+        node2: eval $(cat /home/vagrant/swarm/join-swarm.cmd)
+        node3: eval $(cat /home/vagrant/swarm/join-swarm.cmd)
+
+- hosts: node1
+  become: root
+  tasks:
+    - name: SENTINEL - Generate config
+      raw: "docker run --rm -it -v /home/vagrant/swarm:/config sentinel:dev create_config --orchestrator=swarm --swarm-managers-hostname=node1,node2,node3 --swarm-workers-hostname=node4"
+    - name: DOCKER - Stack deploy
+      raw: docker stack deploy -c swarm/docker-compose.yml infra
+
 
 

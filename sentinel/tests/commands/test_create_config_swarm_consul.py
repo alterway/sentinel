@@ -8,8 +8,8 @@ class CreateConfigSwarmConsulTest(TestCase):
     def setUp(self):
         self.manager = ConfigManager
         self.kwargs = {
-            '--swarm-managers-hostname': ['node1', 'node2', 'node3'],
-            '--swarm-workers-hostname': ['node4']
+            '--swarm-managers-hostname': 'node1,node2,node3',
+            '--swarm-workers-hostname': 'node4'
         }
         self.maxDiff = None
         self.current_path = os.path.dirname(os.path.abspath(__file__))
@@ -36,8 +36,8 @@ class CreateConfigSwarmConsulTest(TestCase):
         self.assertEqual(True, os.path.isfile('/config/docker-compose-node3.yml'))
         self.assertEqual(True, os.path.isfile('/config/docker-compose-node4.yml'))
 
-        nodes = self.kwargs['--swarm-managers-hostname']
-        nodes.extend(self.kwargs['--swarm-workers-hostname'])
+        nodes = self.kwargs['--swarm-managers-hostname'].split(',')
+        nodes.extend(self.kwargs['--swarm-workers-hostname'].split(','))
         for node in nodes:
             with open('%s/swarm_consul_compose_%s_expected.yml' % (self.current_path, node), 'r') as f:
                 expected_config = f.read()

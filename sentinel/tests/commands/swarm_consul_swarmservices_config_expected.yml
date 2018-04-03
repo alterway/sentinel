@@ -105,6 +105,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - CONSUL_ADDRESS=http://consul-node1:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
       - DEBUG=1
     deploy:
       restart_policy:
@@ -121,6 +123,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - CONSUL_ADDRESS=http://consul-node2:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
       - DEBUG=1
     deploy:
       restart_policy:
@@ -137,6 +141,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - CONSUL_ADDRESS=http://consul-node3:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
       - DEBUG=1
     deploy:
       restart_policy:
@@ -153,6 +159,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - CONSUL_ADDRESS=http://consul-node4:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
       - DEBUG=1
     deploy:
       restart_policy:

@@ -4,10 +4,33 @@ import sys
 import os
 
 
+__HELP__ = """
+sentinel create_config paramters:
+    --orchestrator=sting                                      (possible values: [swarm])
+    --backend=string                                          (possible values: [consul], default: consul)
+    --swarm-managers-hostname=string list with coma separator (only if orchestrator is swarm)
+    --swarm-workers-hostname=string list with coma separator  (only if orchestrator is swarm)
+    --domain=string                                           (domain set for consul, default: docker.local)
+    --deployment-type=string                                  (possible values: [swarmservices, compose], default: swarmservices)
+    --bootstrap-address=string                                (ip address for first node to be consul server bootstrap, required only if deployment-type is compose)
+"""
+
+
+def run(**kwargs):
+    if '--help' in kwargs:
+        sys.stdout.write(__HELP__)
+    else:
+        try:
+            ConfigManager.create_config(**kwargs)
+        except SystemExit:
+            sys.stdout.write(__HELP__)
+            sys.exit(1)
+
+
 class SwarmNodesConfig():
     @inject_param('logger')
     def __init__(
-        self, managers_hostname, workers_hostname=[], bootstrap_address=None,
+        self, managers_hostname, workers_hostname='', bootstrap_address=None,
         deployment_type='swarmservices', domain='docker.local', logger=None
     ):
         deployment_type_choices = ["swarmservices", "compose"]
@@ -17,8 +40,8 @@ class SwarmNodesConfig():
             ))
             sys.exit(1)
 
-        self.managers_hostname = managers_hostname
-        self.workers_hostname = workers_hostname
+        self.managers_hostname = managers_hostname.split(',')
+        self.workers_hostname = workers_hostname.split(',')
         self.deployment_type = deployment_type
         self.domain = domain
         self.bootstrap_address = bootstrap_address

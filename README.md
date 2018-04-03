@@ -44,6 +44,15 @@ services:
 * `CONSUL_ADDRESS`: (default: http://127.0.0.1:8500), the address to get consul catalog. You need to have an consul agent on all nodes because the address agent is the node cluster address to register services.
 * `DEBUG`: Add this to have debug logs level.
 
+**Use sentinel command to generate docker-compose files:**
+You can use command `create_config` to generate docker-compose files with consul and sentinel services.
+The files are writed in directory /config.
+To run help command :
+```
+docker run -it --rm -v /tmp/config:/config alterway/sentinel create_config --help
+```
+If you choose deployment-type swarmservices, you have to use command `docker stack deploy`to deploy, use `docker-compose` on each node if you choose compose.
+
 ## Register a service by sentinel
 If your service expose port on docker host, he will be registered by sentinel in consul except if it is a container with "network_mode: host"
 
