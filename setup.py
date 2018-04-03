@@ -14,7 +14,8 @@ setup(
     packages=find_packages(where="sentinel"),
     install_requires=[
         "docker==3.0.*",
-        "requests==2.18.*"
+        "requests==2.18.*",
+        "jinja2==2.10.*"
     ],
     extras_require={
         'ci': ['mock', 'flake8', 'coverage'],
