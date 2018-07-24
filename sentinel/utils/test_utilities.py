@@ -1,19 +1,27 @@
+"""Tests utilities"""
+# pylint: disable-msg=too-few-public-methods
+
+
 class StubResponse():
+    """StubResponse for requests"""
     def __init__(self, status_code, result):
         self.status_code = status_code
         self.result = result
 
     def json(self):
+        """Return json result"""
         return self.result
 
 
 class StubDockerSocket():
+    """Stub for docker socket requests"""
     def __init__(self, version="18.03.0-ce", node_name="node1", is_manager=True):
         self.set_version = version
         self.node_name = node_name
         self.is_manager = is_manager
 
     def version(self):
+        """Mock get docker version"""
         return {
             u'KernelVersion': u'4.4.0-116-generic',
             u'Components': [
@@ -45,6 +53,7 @@ class StubDockerSocket():
         }
 
     def info(self):
+        """Mock get docker info"""
         return {
             "Name": self.node_name,
             "Swarm": {
@@ -55,22 +64,26 @@ class StubDockerSocket():
 
 
 class Container():
-    def __init__(self, id, attrs={}):
-        self.id = id
+    """Mock Container object return by docker SDK"""
+    def __init__(self, container_id, attrs=None):
+        self.id = container_id  # pylint: disable-msg=invalid-name
         self.status = attrs["State"]['Status'] if "State" in attrs else "running"
-        self.attrs = attrs
+        self.attrs = attrs if attrs else {}
 
 
 class SwarmService():
-    def __init__(self, id, attrs={}, tasks=[]):
-        self.id = id
-        self.attrs = attrs
-        self.list_tasks = tasks
+    """Mock Swarm service return by docker SDk"""
+    def __init__(self, service_id, attrs=None, tasks=()):
+        self.id = service_id  # pylint: disable-msg=invalid-name
+        self.attrs = attrs if attrs else {}
+        self.list_tasks = tasks if isinstance(tasks, list) else []
 
     def tasks(self):
+        """Mock list tasks for a swarm service return by docker SDK"""
         return self.list_tasks
 
 
 class SwarmNode():
-    def __init__(self, attrs={}):
-        self.attrs = attrs
+    """Mock Swarm Node return by docker SDK"""
+    def __init__(self, attrs=None):
+        self.attrs = attrs if attrs else {}

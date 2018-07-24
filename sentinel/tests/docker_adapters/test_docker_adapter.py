@@ -25,7 +25,7 @@ class DockerAdapterTest(unittest.TestCase):
             True,
             self.docker_adapter.container_is_running(
                 Container(
-                    id="123456789",
+                    container_id="123456789",
                     attrs={
                         'State': {'Status': 'running'},
                         'Name': '/toto',
@@ -44,7 +44,7 @@ class DockerAdapterTest(unittest.TestCase):
             False,
             self.docker_adapter.container_is_running(
                 Container(
-                    id="123456789",
+                    container_id="123456789",
                     attrs={
                         'State': {'Status': 'created'},
                         'Name': '/toto',
@@ -63,7 +63,7 @@ class DockerAdapterTest(unittest.TestCase):
             True,
             self.docker_adapter.container_is_not_swarmservice(
                 Container(
-                    id="123456789",
+                    container_id="123456789",
                     attrs={
                         'State': {'Status': 'created'},
                         'Name': '/toto',
@@ -80,7 +80,7 @@ class DockerAdapterTest(unittest.TestCase):
             False,
             self.docker_adapter.container_is_not_swarmservice(
                 Container(
-                    id="123456789",
+                    container_id="123456789",
                     attrs={
                         'State': {'Status': 'created'},
                         'Name': '/toto',
@@ -99,7 +99,7 @@ class DockerAdapterTest(unittest.TestCase):
             'project_toto',
             self.docker_adapter.get_container_name(
                 Container(
-                    id="123456789",
+                    container_id="123456789",
                     attrs={
                         'State': {'Status': 'created'},
                         'Name': '/toto',
@@ -118,7 +118,7 @@ class DockerAdapterTest(unittest.TestCase):
             'toto',
             self.docker_adapter.get_container_name(
                 Container(
-                    id="123456789",
+                    container_id="123456789",
                     attrs={
                         'State': {'Status': 'created'},
                         'Name': '/toto',
@@ -133,7 +133,7 @@ class DockerAdapterTest(unittest.TestCase):
     def test_get_container_exposed_ports(self):
         exposed_ports = self.docker_adapter.get_container_exposed_ports(
             Container(
-                id="123456789",
+                container_id="123456789",
                 attrs={
                     "NetworkSettings": {
                         "Ports": {
@@ -156,7 +156,7 @@ class DockerAdapterTest(unittest.TestCase):
     def test_get_container_exposed_ports_no_port(self):
         exposed_ports = self.docker_adapter.get_container_exposed_ports(
             Container(
-                id="123456789",
+                container_id="123456789",
                 attrs={"NetworkSettings": {"Ports": {}}}
             )
         )
@@ -165,7 +165,7 @@ class DockerAdapterTest(unittest.TestCase):
     def test_get_container_labels_and_vars(self):
         labels, envs = self.docker_adapter.get_container_labels_and_vars(
             Container(
-                id='123456789',
+                container_id='123456789',
                 attrs={
                     "Config": {
                         "Labels": {"label1": "aaaa", "label2": "bbbb"},

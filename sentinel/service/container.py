@@ -1,23 +1,27 @@
-from dependencies_injection.inject_param import inject_param
-from zope.interface import implementer
-import time
+"""Set Service object from docker containers"""
 
-from service.base import ServiceInterface, ServiceBase
+import time
+from dependencies_injection.inject_param import inject_param
+
+from service.base import ServiceBase
 from models import Service, Node
 
 
-@implementer(ServiceInterface)
 class Container(ServiceBase):
-    """ Adapter to manage docker container as service
-    """
+    ''' Adapter to manage docker container as service'''
+
     @classmethod
-    @inject_param('docker_adapter')
-    def get_services(cls, docker_adapter=None):
+    def get_services(cls):
+        ''' Get services from running container'''
         services = []
+        docker_adapter = cls._get_docker_adapter()
         containers = [
             container
             for container in docker_adapter.list_container()
-            if docker_adapter.container_is_running(container) and docker_adapter.container_is_not_swarmservice(container)
+            if (
+                docker_adapter.container_is_running(container) and
+                docker_adapter.container_is_not_swarmservice(container)
+            )
         ]
 
         for container in containers:
@@ -27,6 +31,7 @@ class Container(ServiceBase):
 
     @classmethod
     def get_services_from_id(cls, service_id):
+        '''Get services from container_id'''
         return cls._get_services_object(service_id)
 
     @classmethod
@@ -45,7 +50,10 @@ class Container(ServiceBase):
         exposed_ports = docker_adapter.get_container_exposed_ports(container)
         services = []
         if not exposed_ports:
-            logger.info('Ignored Service : %s don\'t publish port' % docker_adapter.get_container_name(container))
+            logger.info(
+                'Ignored Service : %s don\'t publish port',
+                docker_adapter.get_container_name(container)
+            )
         else:
             tags = ['container:%s' % container.id]
             labels, envs = docker_adapter.get_container_labels_and_vars(container)
@@ -71,3 +79,8 @@ class Container(ServiceBase):
                     )
 
         return services
+
+    @staticmethod
+    @inject_param("docker_adapter")
+    def _get_docker_adapter(docker_adapter=None):
+        return docker_adapter

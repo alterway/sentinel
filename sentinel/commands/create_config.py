@@ -1,7 +1,10 @@
-from dependencies_injection.inject_param import inject_param
-from jinja2 import Environment, PackageLoader, select_autoescape
+# pylint: disable-msg=line-too-long
+# pylint: disable-msg=too-few-public-methods
+"""Module to generate docker-compose file to configure sentinel stack"""
 import sys
 import os
+from dependencies_injection.inject_param import inject_param
+from jinja2 import Environment, PackageLoader, select_autoescape
 
 
 __HELP__ = """
@@ -17,6 +20,7 @@ sentinel create_config paramters:
 
 
 def run(**kwargs):
+    """run command given to sentinel"""
     if '--help' in kwargs:
         sys.stdout.write(__HELP__)
     else:
@@ -27,17 +31,19 @@ def run(**kwargs):
             sys.exit(1)
 
 
-class SwarmNodesConfig(object):
+class SwarmNodesConfig:
+    """Generate config oject for swarm nodes"""
     @inject_param('logger')
     def __init__(
-        self, managers_hostname, workers_hostname='', bootstrap_address=None,
-        deployment_type='swarmservices', domain='docker.local', logger=None
+            self, managers_hostname, workers_hostname='', bootstrap_address=None,
+            deployment_type='swarmservices', domain='docker.local', logger=None
     ):  # pylint: disable-msg=too-many-arguments
         deployment_type_choices = ["swarmservices", "compose"]
         if deployment_type not in deployment_type_choices:
-            logger.error("%s is not a valid deployment_type : %s" % (
+            logger.error(
+                "%s is not a valid deployment_type : %s",
                 deployment_type, deployment_type_choices
-            ))
+            )
             sys.exit(1)
 
         self.managers_hostname = managers_hostname.split(',')
@@ -47,6 +53,7 @@ class SwarmNodesConfig(object):
         self.bootstrap_address = bootstrap_address
 
     def generate(self):
+        """Generate config"""
         getattr(self, '_gen_config_%s' % self.deployment_type)()
 
     def _gen_config_swarmservices(self):
@@ -109,22 +116,23 @@ class SwarmNodesConfig(object):
         if not os.path.exists('/config'):
             os.mkdir('/config')
 
-        with open('/config/%s' % filename, 'w') as f:
-            f.write(config)
+        with open('/config/%s' % filename, 'w') as file:
+            file.write(config)
 
 
-class ConfigManager(object):
-
+class ConfigManager:
+    """Manage config from command given to sentinel"""
     @classmethod
     @inject_param('logger')
     def create_config(cls, logger=None, **kwargs):
+        """Create the config"""
         orchestrator = None
         backend = "consul"
 
-        if '--orchestrator' in kwargs:
+        if kwargs.get('--orchestrator'):
             orchestrator = kwargs['--orchestrator']
 
-        if '--backend' in kwargs:
+        if kwargs.get('--backend'):
             backend = kwargs['--backend']
 
         if not orchestrator or not backend:
@@ -135,16 +143,16 @@ class ConfigManager(object):
             getattr(cls, '%s_%s_gen_config' % (orchestrator, backend))(**kwargs)
         except AttributeError:
             logger.error(
-                "No method to configure orchestrator '%s' with backend '%s'" % (
-                    orchestrator, backend
-                )
+                "No method to configure orchestrator '%s' with backend '%s'",
+                orchestrator, backend
             )
             sys.exit(1)
 
     @staticmethod
     @inject_param('logger')
     def swarm_consul_gen_config(logger=None, **kwargs):
-        if '--swarm-managers-hostname' in kwargs:
+        """Generate SwarmNodeConfig from command given to sentinel"""
+        if kwargs.get('--swarm-managers-hostname'):
             swarm_config = SwarmNodesConfig(
                 managers_hostname=kwargs['--swarm-managers-hostname'],
                 workers_hostname=kwargs['--swarm-workers-hostname'] if '--swarm-workers-hostname' in kwargs else [],

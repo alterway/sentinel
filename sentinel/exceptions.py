@@ -1,25 +1,29 @@
-class NotImplementedException(NotImplementedError):
-    def __init__(self, method, class_name):
-        self.message = "Methode %s is not implemented for %s" % (
-            method, class_name
-        )
+"""Sentinel Exceptions"""
 
 
-class BackendAdapterNotKnown(Exception):
+class SentinelBaseError(Exception):
+    """
+    SentinelBaseError Exception
+    All exceptions define in sentinel module need to inherit this Error class
+    """
+    def __init__(self, message):
+        self.message = message
+        super().__init__()
+
+
+class BackendAdapterNotKnown(SentinelBaseError):
+    """Raise when specified backend is not implemented"""
     def __init__(self, backend):
-        self.message = 'Backend adpater doesn\'t exists : %s' % backend
+        super().__init__('Backend adpater doesn\'t exists : %s' % backend)
 
 
-class OrchestratorAdapterNotKnown(Exception):
+class OrchestratorAdapterNotKnown(SentinelBaseError):
+    """Raise when specified orchestrator is not implemented"""
     def __init__(self, orchestrator):
-        self.message = 'Orchestrator adapter doesn\'t exists : %s' % orchestrator
+        super().__init__('Orchestrator adapter doesn\'t exists : %s' % orchestrator)
 
 
-class InvalidIPAddress(Exception):
+class InvalidIPAddress(SentinelBaseError):
+    """Raise when ip address found for service is not valid"""
     def __init__(self, address):
-        self.message = 'IP %s is not a valid ip address' % address
-
-
-def not_implemented(class_name):
-    import inspect
-    raise NotImplementedException(inspect.stack()[1][3], class_name)
+        super().__init__('IP %s is not a valid ip address' % address)

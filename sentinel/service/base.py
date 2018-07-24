@@ -1,19 +1,24 @@
-from dependencies_injection.inject_param import inject_param
-from zope.interface import Interface
+# pylint: skip-file
+"""Service Base implements ServiceInterface and ServiceBase to inherit in services"""
+
 import re
+
+from dependencies_injection.inject_param import inject_param
+from zope.interface import Interface, implementer
 
 
 class ServiceInterface(Interface):  # pylint: disable-msg=inherit-non-class
     '''Interface to manage docker service'''
 
-    def get_services(cls, **kwargs):  # pylint: disable-msg=no-method-argument  # noqa
+    def get_services():  # noqa  # pylint: disable-msg=no-method-argument
         '''Create services object from docker services'''
 
-    def get_services_from_id(cls, service_id, **kwargs): # noqa
+    def get_services_from_id(service_id): # noqa  # pylint: disable-msg=no-self-argument
         '''Create services object from one docker service'''
 
 
-class ServiceBase(object):
+@implementer(ServiceInterface)
+class ServiceBase:
     '''Adapter to manage docker service'''
 
     @classmethod
@@ -21,7 +26,10 @@ class ServiceBase(object):
         labels.update(cls._get_envs_to_dict(envs))
 
         if "not_register" in labels:
-            if "service_%s_name" % internal_port not in labels and "service_%s_tags" % internal_port not in labels:
+            if (
+                    "service_%s_name" % internal_port not in labels and
+                    "service_%s_tags" % internal_port not in labels
+            ):
                 return False
 
         return True
@@ -40,7 +48,7 @@ class ServiceBase(object):
             if key in envs_dict:
                 tags.extend(envs_dict[key].split(','))
 
-        logger.debug("Tags : %s" % list(set(tags)))
+        logger.debug("Tags : %s", list(set(tags)))
 
         return list(set(tags))
 
@@ -65,7 +73,7 @@ class ServiceBase(object):
         for env in envs:
             envs_dict[env.split('=')[0].lower()] = env.split('=')[1]
 
-        logger.debug("envs : %s" % envs_dict)
+        logger.debug("envs : %s", envs_dict)
         return envs_dict
 
     @staticmethod

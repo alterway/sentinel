@@ -1,17 +1,19 @@
-from dependencies_injection.inject_param import inject_param
-from zope.interface import implementer
+"""Define consul adapter to use consul backend"""
+
 import os
-import requests
 import json
 import time
+import requests
+from dependencies_injection.inject_param import inject_param
+from zope.interface import implementer
 
 from backends.backend import Backend
 from models import Service, Node
 
 
 @implementer(Backend)
-class Consul(object):
-
+class Consul:
+    """Consul adapter for consul backend"""
     def __init__(self):
         self.address = os.environ.get(
             'CONSUL_ADDRESS'
@@ -20,6 +22,7 @@ class Consul(object):
     @inject_param('docker_adapter')
     @inject_param('logger')
     def get_services(self, docker_adapter=None, logger=None):
+        """Get services register in consul"""
         response = requests.get('%s/v1/catalog/services' % self.address).json()
         services = [
             Service(name=key, tags=response[key], nodes=[])
@@ -28,12 +31,19 @@ class Consul(object):
         local_services = []
 
         for service in sorted(services, key=lambda x: x.name):
-            response = requests.get('%s/v1/catalog/service/%s' % (self.address, service.name)).json()
+            response = requests.get(
+                '%s/v1/catalog/service/%s' % (
+                    self.address, service.name
+                )
+            ).json()
             for node in response:
                 service.nodes.append(Node(address=node['Address'], name=node['Node']))
-                service.port = node['ServicePort']
+                service.set_port(node['ServicePort'])
 
-            logger.debug("Nodes for service %s are : %s" % (service.name, service.nodes))
+            logger.debug(
+                "Nodes for service %s are : %s",
+                service.name, service.nodes
+            )
 
         # Filter services not exist on local node
         local_node_name = docker_adapter.get_local_node_name()
@@ -48,10 +58,15 @@ class Consul(object):
 
         return local_services
 
+    @staticmethod
     @inject_param("logger")
-    def register_service(self, service, logger=None):
-        logger.debug("CONSUL - service to register: %s" % service.name)
-        logger.debug("CONSUL - service to register for nodes : %s" % [node.address for node in service.nodes])
+    def register_service(service, logger=None):
+        """Register a service in consul"""
+        logger.debug("CONSUL - service to register: %s", service.name)
+        logger.debug(
+            "CONSUL - service to register for nodes : %s",
+            [node.address for node in service.nodes]
+        )
         for node in service.nodes:
             payload = {
                 "ID": "%s-%s" % (service.name, node.name.split('.')[0]),
@@ -62,8 +77,11 @@ class Consul(object):
                 "EnableTagOverride": True
             }
 
-            logger.debug('Ask for register service %s : %s %s:%s' % (service.name, node.name, node.address, service.port))
-            logger.debug('Payload : %s' % payload)
+            logger.debug(
+                'Ask for register service %s : %s %s:%s',
+                service.name, node.name, node.address, service.port
+            )
+            logger.debug('Payload : %s', payload)
 
             attempt = 0
             passed = False
@@ -75,52 +93,82 @@ class Consul(object):
                     )
                     passed = True
                 except requests.exceptions.ConnectionError:
-                    logger.error("Can't connect to consul address: http://%s:8500" % node.address)
+                    logger.error(
+                        "Can't connect to consul address: http://%s:8500",
+                        node.address
+                    )
                     attempt += 1
                     time.sleep(1)  # Wait one second before retry
 
             if response and response.status_code == 200:
-                logger.info("Register Service : %s - %s %s:%s" % (
-                    service.name, node.name, node.address, service.port)
+                logger.info(
+                    "Register Service : %s - %s %s:%s",
+                    service.name, node.name, node.address, service.port
                 )
             else:
                 logger.error(
-                    "Failed to register service %s for node %s : %s" % (
-                        service.name, node.name, response.content
-                    )
+                    "Failed to register service %s for node %s : %s",
+                    service.name, node.name, response.content
                 )
 
     @inject_param("logger")
     def remove_service_with_tag(self, tag, logger=None):
+        """Remove service which contains the given tag"""
         services = self.get_services()
-        service_to_remove = [service for service in services if tag in service.tags]
+        service_to_remove = [
+            service
+            for service in services
+            if tag in service.tags
+        ]
 
         if service_to_remove:
             self.deregister_service(service_to_remove[0])
         else:
-            logger.debug("Service with tag %s not found in consul" % tag)
+            logger.debug("Service with tag %s not found in consul", tag)
 
     @inject_param('logger')
     def deregister_node(self, node_name, logger=None):
+        """Deregister a node in consul"""
         payload = {
             'Node': node_name
         }
-        response = requests.put('%s/v1/catalog/deregister' % self.address, data=json.dumps(payload))
+        response = requests.put(
+            '%s/v1/catalog/deregister' % self.address,
+            data=json.dumps(payload)
+        )
 
         if response.status_code == 200 and response.json():
-            logger.info('Deregister Node : %s ' % node_name)
+            logger.info('Deregister Node : %s ', node_name)
         else:
-            logger.error("Failed to deregister node %s : %s" % (node_name, response.content))
+            logger.error(
+                "Failed to deregister node %s : %s",
+                node_name, response.content
+            )
 
+    @staticmethod
     @inject_param('logger')
-    def deregister_service(self, service, logger=None):
-        logger.debug("Process service %s to deregister on nodes : %s" % (service.name, service.nodes))
+    def deregister_service(service, logger=None):
+        """Deregister a service in consul"""
+        logger.debug(
+            "Process service %s to deregister on nodes : %s",
+            service.name, service.nodes
+        )
 
         for node in service.nodes:
             logger.debug("Process node %s to deregister service" % node.name)
-            response = requests.put('http://%s:8500/v1/agent/service/deregister/%s' % (node.address, service.name))
+            response = requests.put(
+                'http://%s:8500/v1/agent/service/deregister/%s' % (
+                    node.address, service.name
+                )
+            )
 
             if response.status_code == 200:
-                logger.info('Deregister Service : %s - %s' % (service.name, node.name))
+                logger.info(
+                    'Deregister Service : %s - %s',
+                    service.name, node.name
+                )
             else:
-                logger.error("Failed to deregister service %s for node %s : %s" % (service.name, node.name, response.content))
+                logger.error(
+                    "Failed to deregister service %s for node %s : %s",
+                    service.name, node.name, response.content
+                )

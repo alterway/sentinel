@@ -1,8 +1,10 @@
+"""Define dependencies injections"""
 import os
 import importlib
 
 
 def backend_adapter():
+    """Return adapter for the desired backend"""
     backend = os.environ.get("BACKEND") if os.environ.get("BACKEND") else "consul"
     backend_class = getattr(
         importlib.import_module('backends.%s' % backend),
@@ -12,6 +14,7 @@ def backend_adapter():
 
 
 def orchestrator_adapter():
+    """Return adapter for the desired orchestrator"""
     orchestrator = os.environ.get("ORCHESTRATOR") if os.environ.get("ORCHESTRATOR") else "swarm"
     return getattr(
         importlib.import_module('orchestrators.%s' % orchestrator),
@@ -20,6 +23,7 @@ def orchestrator_adapter():
 
 
 def docker_adapter():
+    """Return adapter for the docker version"""
     from docker_adapters.docker_adapter import DockerAdapter
 
     if os.environ.get('ORCHESTRATOR') == 'swarm':
@@ -35,11 +39,12 @@ def docker_adapter():
             importlib.import_module('docker_adapters.docker_%s' % docker_version),
             'DockerVersionAdapter'
         )
-    except Exception:
+    except ImportError:
         return DockerAdapter
 
 
 def swarm_adapter():
+    """Return adapter for the docker swarm version"""
     from docker_adapters.swarm_adapter import SwarmAdapter
 
     if os.environ.get('TESTING_MODE'):
@@ -52,21 +57,24 @@ def swarm_adapter():
             importlib.import_module('docker_adapters.swarm_%s' % docker_version),
             'SwarmVersionAdapter'
         )
-    except Exception:
+    except ImportError:
         return SwarmAdapter
 
 
 def container_adapter():
+    """Return adapter to get container services"""
     from service.container import Container
     return Container
 
 
 def swarmservice_adapter():
+    """Return adapter to get swarm services"""
     from service.swarmservice import SwarmService
     return SwarmService
 
 
-def logger():
+def get_logger():  # pylint: disable-msg=redefined-outer-name
+    """Return the sentinel logger"""
     import logging
     logger = logging.getLogger('STDOUT')
     if os.environ.get('TESTING_MODE'):
@@ -82,5 +90,5 @@ DEPENDENCIES = {
     "swarm_adapter": swarm_adapter,
     "container_adapter": container_adapter,
     "swarmservice_adapter": swarmservice_adapter,
-    "logger": logger
+    "logger": get_logger
 }

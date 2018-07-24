@@ -1,9 +1,11 @@
+"""Logging module for sentinel"""
 import logging
 import sys
 import os
 
 
 def set_logging():
+    """Set a logger STDOUT"""
     logger = logging.getLogger('STDOUT')
     out_hdlr = logging.StreamHandler(sys.stdout)
     out_hdlr.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))

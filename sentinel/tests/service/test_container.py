@@ -1,9 +1,12 @@
+import unittest
+from mock import patch
+from zope.interface.verify import verifyObject
+
+from service.base import ServiceInterface
 from service.container import Container as ContainerAdapter
 from docker_adapters.docker_adapter import DockerAdapter
 from docker_adapters.swarm_adapter import SwarmAdapter
 from utils.test_utilities import Container
-from mock import patch
-import unittest
 
 
 class TestContainerAdapter(unittest.TestCase):
@@ -11,8 +14,11 @@ class TestContainerAdapter(unittest.TestCase):
     def setUp(self):
         self.container_adapter = ContainerAdapter()
 
+    def test_service_interface_implementation(self):
+        self.assertEqual(True, verifyObject(ServiceInterface, self.container_adapter))
+
     @patch.object(DockerAdapter, 'get_container_from_id', return_value=Container(
-        id='92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
+        container_id='92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
         attrs={
             'State': {'Status': 'running'},
             'Name': '/toto',
@@ -43,7 +49,7 @@ class TestContainerAdapter(unittest.TestCase):
 
     @patch.object(DockerAdapter, 'get_container_from_id', side_effect=[
         Container(
-            id='92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
+            container_id='92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
             attrs={
                 'State': {'Status': 'created'},
                 'Name': '/toto',
@@ -55,7 +61,7 @@ class TestContainerAdapter(unittest.TestCase):
             }
         ),
         Container(
-            id='92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
+            container_id='92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
             attrs={
                 'State': {'Status': 'running'},
                 'Name': '/toto',
@@ -87,7 +93,7 @@ class TestContainerAdapter(unittest.TestCase):
         self.assertEqual(3000, services[0].port)
 
     @patch.object(DockerAdapter, 'get_container_from_id', return_value=Container(
-        id='92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
+        container_id='92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
         attrs={
             'State': {'Status': 'running'},
             'Name': '/toto',
@@ -113,15 +119,15 @@ class TestContainerAdapter(unittest.TestCase):
         self.assertEqual(0, len(services))
 
     @patch.object(DockerAdapter, 'list_container', return_value=[
-        Container(id='r1neuke2qg59ivhdblg4dvi7h.1', attrs={'State': {'Status': 'running'}, 'Config': {'Labels': {'com.docker.swarm.service.id': 'r1neuke2qg59ivhdblg4dvi7h'}}}),
-        Container(id='123456789', attrs={'State': {'Status': 'running'}, 'Config': {'Labels': {}}}),
-        Container(id='987654321', attrs={'State': {'Status': 'running'}, 'Config': {'Labels': {}}}),
-        Container(id='789123456', attrs={'State': {'Status': 'running'}, 'Config': {'Labels': {}}})
+        Container(container_id='r1neuke2qg59ivhdblg4dvi7h.1', attrs={'State': {'Status': 'running'}, 'Config': {'Labels': {'com.docker.swarm.service.id': 'r1neuke2qg59ivhdblg4dvi7h'}}}),
+        Container(container_id='123456789', attrs={'State': {'Status': 'running'}, 'Config': {'Labels': {}}}),
+        Container(container_id='987654321', attrs={'State': {'Status': 'running'}, 'Config': {'Labels': {}}}),
+        Container(container_id='789123456', attrs={'State': {'Status': 'running'}, 'Config': {'Labels': {}}})
     ])
     @patch.object(DockerAdapter, 'get_container_from_id', side_effect=[
-        Container(id='123456789', attrs={'Name': 'c1', 'State': {'Status': 'running'}, 'Config': {'Labels': {}}, "NetworkSettings": {"Ports": {"80/tcp": [{"HostPort": '3000'}]}}}),
-        Container(id='987654321', attrs={'Name': 'c2', 'State': {'Status': 'running'}, 'Config': {'Labels': {}}, "NetworkSettings": {"Ports": {"80/tcp": [{"HostPort": '3001'}]}}}),
-        Container(id='789123456', attrs={'Name': 'c3', 'State': {'Status': 'running'}, 'Config': {'Labels': {}}, "NetworkSettings": {"Ports": {"80/tcp": [{"HostPort": '3002'}]}}})
+        Container(container_id='123456789', attrs={'Name': 'c1', 'State': {'Status': 'running'}, 'Config': {'Labels': {}}, "NetworkSettings": {"Ports": {"80/tcp": [{"HostPort": '3000'}]}}}),
+        Container(container_id='987654321', attrs={'Name': 'c2', 'State': {'Status': 'running'}, 'Config': {'Labels': {}}, "NetworkSettings": {"Ports": {"80/tcp": [{"HostPort": '3001'}]}}}),
+        Container(container_id='789123456', attrs={'Name': 'c3', 'State': {'Status': 'running'}, 'Config': {'Labels': {}}, "NetworkSettings": {"Ports": {"80/tcp": [{"HostPort": '3002'}]}}})
     ])
     @patch.object(SwarmAdapter, 'get_local_node_name', return_value='node1')
     @patch.object(SwarmAdapter, 'get_local_node_address', return_value='192.168.50.4')

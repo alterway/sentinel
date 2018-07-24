@@ -1,19 +1,23 @@
+"""Implement adapter for Swarm orchestrator"""
+import time
+
+from datetime import datetime
 from dependencies_injection.inject_param import inject_param
 from zope.interface import implementer
-from datetime import datetime
-import time
+
 
 from orchestrators.orchestrator import Orchestrator
 
 
 @implementer(Orchestrator)
-class Swarm(object):
+class Swarm:
     """ This class permit to get services in swarm cluster
     """
     @classmethod
     @inject_param("swarm_adapter")
     @inject_param("logger")
     def listen_events(cls, swarm_adapter=None, logger=None):
+        """listen docker swarm events"""
         logger.info("Listen docker events...")
         client = swarm_adapter.get_docker_socket()
         for event in client.events(since=datetime.utcnow(), decode=True):
@@ -38,7 +42,8 @@ class Swarm(object):
         """
         if event['Type'] == 'service':
             return swarmservice_adapter.get_services_from_id(event['Actor']['ID'])
-        elif event['Type'] == 'container':
+
+        if event['Type'] == 'container':
             return container_adapter.get_services_from_id(event['Actor']['ID'])
 
         return []
@@ -51,7 +56,11 @@ class Swarm(object):
         """
         if event['Type'] == 'service' and swarm_adapter.is_manager():
             return 'swarm-service:%s' % event['Actor']['ID']
-        elif event['Type'] == 'container' and 'com.docker.swarm.service.name' not in event['Actor']['Attributes']:
+
+        if (
+                event['Type'] == 'container' and
+                'com.docker.swarm.service.name' not in event['Actor']['Attributes']
+        ):
             return 'container:%s' % event['Actor']['ID']
 
         logger.debug("No tag to remove")
@@ -64,7 +73,7 @@ class Swarm(object):
         try:
             getattr(cls, "_process_service_%s" % event['Action'])(event)
         except AttributeError:
-            logger.info("Event %s has no method to process" % event['Action'])
+            logger.info("Event %s has no method to process", event['Action'])
 
     @classmethod
     @inject_param("backend_adapter")
@@ -78,7 +87,7 @@ class Swarm(object):
     @classmethod
     @inject_param("logger")
     def _process_service_update(cls, event, logger=None):
-        logger.debug('Event Update : %s' % event)
+        logger.debug('Event Update : %s', event)
         if event['Type'] == 'node':
             attrs = event['Actor']['Attributes']
             if 'availability.new' in attrs:
@@ -106,7 +115,7 @@ class Swarm(object):
     @inject_param("backend_adapter")
     @inject_param("logger")
     def _process_service_remove_or_kill(cls, event, backend_adapter=None, logger=None):
-        logger.debug("Get event remove : %s" % event)
+        logger.debug("Get event remove : %s", event)
         tag_to_remove_on_backend = cls.get_service_tag_to_remove(event)
         if tag_to_remove_on_backend is not None:
             backend_adapter.remove_service_with_tag(tag_to_remove_on_backend)
@@ -115,14 +124,20 @@ class Swarm(object):
     @inject_param('backend_adapter')
     @inject_param('logger')
     def _process_node_down(node_name, new_status, backend_adapter=None, logger=None):
-        logger.info('Swarm Node %s is %s, deregister this node in backend...' % (node_name, new_status))
+        logger.info(
+            'Swarm Node %s is %s, deregister this node in backend...',
+            node_name, new_status
+        )
         backend_adapter.deregister_node(node_name)
 
     @classmethod
     @inject_param('backend_adapter')
     @inject_param('logger')
     def _process_node_up(cls, node_name, new_status, backend_adapter=None, logger=None):
-        logger.info('Swarm Node %s is %s, process register services...' % (node_name, new_status))
+        logger.info(
+            'Swarm Node %s is %s, process register services...',
+            node_name, new_status
+        )
         for service in cls.get_services():
             service.nodes = [
                 node

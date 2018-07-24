@@ -1,6 +1,7 @@
-from dependencies_injection.inject_param import inject_param
+"""Main module to listen events, get services and register them in backend"""
 import importlib
 import sys
+from dependencies_injection.inject_param import inject_param
 
 from utils.logger import set_logging
 
@@ -9,6 +10,7 @@ from utils.logger import set_logging
 @inject_param('orchestrator_adapter')
 @inject_param('logger')
 def sync(backend_adapter=None, orchestrator_adapter=None, logger=None):
+    '''Sync register services with effective running services'''
     registered_services = backend_adapter.get_services()
     running_services = orchestrator_adapter.get_services()
 
@@ -31,14 +33,15 @@ def sync(backend_adapter=None, orchestrator_adapter=None, logger=None):
 
 @inject_param("orchestrator_adapter")
 def listen_events(orchestrator_adapter=None):
+    '''Start listen docker events'''
     orchestrator_adapter.listen_events()
 
 
-def get_kwargs_from_argv(argv):
+def _get_kwargs_from_argv(argv):
     kwargs = {}
     for index, arg in enumerate(argv):
         if index > 1:
-            if arg == '--h' or arg == '--help':
+            if '--h' in arg:
                 kwargs['--help'] = True
                 break
 
@@ -50,12 +53,17 @@ def get_kwargs_from_argv(argv):
 
 
 def main():
+    """
+    Main entry for sentinel program
+    Sync registred services with effective running services
+    and start listen docker events for services updates
+    """
     if len(sys.argv) == 1:
         set_logging()
         sync()
         listen_events()
     else:
-        kwargs = get_kwargs_from_argv(sys.argv)
+        kwargs = _get_kwargs_from_argv(sys.argv)
         getattr(
             importlib.import_module('commands.%s' % sys.argv[1]),
             'run'

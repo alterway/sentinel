@@ -99,5 +99,23 @@ if __name__ == '__main__':
         chdir='%s/sentinel' % chdir,
         action="Code sniffer"
     )
+    errors += run(
+        command='pylint --ignore=tests -r y sentinel',
+        chdir=chdir,
+        action="Python linter",
+        silent=False
+    )
+    errors += run(
+        command="radon mi -i tests -s sentinel",
+        chdir=chdir,
+        action="Verify project maintainability",
+        silent=False
+    )
+    errors += run(
+        command="xenon --max-absolute B --max-modules A --max-average A sentinel",
+        chdir=chdir,
+        action="Verify project cyclomatic complexity",
+        silent=False
+    )
 
-    sys.exit(0 if errors == 0 else 1)
+    sys.exit(0 if not errors else 1)

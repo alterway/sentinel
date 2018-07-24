@@ -1,14 +1,21 @@
+import unittest
+from mock import patch
+from zope.interface.verify import verifyObject
+
+
 from docker_adapters.swarm_adapter import SwarmAdapter
+from service.base import ServiceInterface
 from service.swarmservice import SwarmService as SwarmServiceAdapter
 from utils.test_utilities import SwarmNode, SwarmService
 from models import Node, Service
-from mock import patch
-import unittest
 
 
 class TestSwarmService(unittest.TestCase):
     def setUp(self):
         self.swarmservice_adapter = SwarmServiceAdapter()
+
+    def test_service_interface_implementation(self):
+        self.assertEqual(True, verifyObject(ServiceInterface, self.swarmservice_adapter))
 
     @patch.object(SwarmAdapter, 'is_manager', return_value=True)
     @patch.object(
@@ -83,7 +90,7 @@ class TestSwarmService(unittest.TestCase):
         mock_get_service_exposed_ports
     ):
         service = SwarmService(
-            id='r1neuke2qg59ivhdblg4dvi7h',
+            service_id='r1neuke2qg59ivhdblg4dvi7h',
             attrs={'Spec': {'Name': 'hello'}}
         )
         services = self.swarmservice_adapter._get_services_object(service)
@@ -108,7 +115,7 @@ class TestSwarmService(unittest.TestCase):
         mock_get_all_nodes, mock_get_service_exposed_ports
     ):
         service = SwarmService(
-            id='r1neuke2qg59ivhdblg4dvi7h',
+            service_id='r1neuke2qg59ivhdblg4dvi7h',
             attrs={'Spec': {'Name': 'hello'}}
         )
         services = self.swarmservice_adapter._get_services_object(service)
@@ -139,7 +146,7 @@ class TestSwarmService(unittest.TestCase):
         mock_get_service_exposed_ports
     ):
         service = SwarmService(
-            id='r1neuke2qg59ivhdblg4dvi7h',
+            service_id='r1neuke2qg59ivhdblg4dvi7h',
             attrs={'Spec': {'Name': 'hello'}}
         )
         services = self.swarmservice_adapter._get_services_object(service)
@@ -217,7 +224,7 @@ class TestSwarmService(unittest.TestCase):
             1,
             len(self.swarmservice_adapter._get_nodes_running_service(
                 SwarmService(
-                    id="123456789",
+                    service_id="123456789",
                     attrs={
                         "Spec": {
                             "Labels": {"label1": "aaaa", "label2": "bbbb"},

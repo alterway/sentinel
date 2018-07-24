@@ -1,7 +1,9 @@
+# pylint: skip-file
+"""Define backend interface for backend adapters"""
 from zope.interface import Interface, Attribute
 
 
-class Backend(Interface):  # pylint: disable-msg=inherit-non-class
+class Backend(Interface):
     """Interface to create backend adapters"""
 
     address = Attribute("""Address to get backend""")

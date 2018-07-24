@@ -59,7 +59,7 @@ class SwarmAdapterTest(unittest.TestCase):
             "hello",
             self.docker_adapter.get_swarmservice_name(
                 SwarmService(
-                    id="4841631984961",
+                    service_id="4841631984961",
                     attrs={
                         "Spec": {"Name": "hello"}
                     }
@@ -94,7 +94,7 @@ class SwarmAdapterTest(unittest.TestCase):
     def test__get_swarm_service_labels_and_vars(self):
         labels, envs = self.docker_adapter.get_swarmservice_labels_and_vars(
             SwarmService(
-                id="123456789",
+                service_id="123456789",
                 attrs={
                     "Spec": {
                         "Labels": {"label1": "aaaa", "label2": "bbbb"},
@@ -113,7 +113,7 @@ class SwarmAdapterTest(unittest.TestCase):
     def test_get_service_exposed_ports(self):
         exposed_ports = self.docker_adapter.get_swarmservice_exposed_ports(
             SwarmService(
-                id='r1neuke2qg59ivhdblg4dvi7h',
+                service_id='r1neuke2qg59ivhdblg4dvi7h',
                 attrs={
                     'Endpoint': {
                         'Ports': [
@@ -154,7 +154,7 @@ class SwarmAdapterTest(unittest.TestCase):
             0,
             len(self.docker_adapter.get_swarmservice_exposed_ports(
                 SwarmService(
-                    id='r1neuke2qg59ivhdblg4dvi7h',
+                    service_id='r1neuke2qg59ivhdblg4dvi7h',
                     attrs={'Endpoint': {}}
                 )
             ))
