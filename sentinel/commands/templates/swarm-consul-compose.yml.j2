@@ -1,0 +1,28 @@
+version: "2"
+
+services:
+  consul:
+    image: consul
+{% if IS_BOOTSTRAP %}    command: agent -server -bootstrap-expect 1 -domain {{ DOMAIN }} -node={{ HOSTNAME }} -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+{% elif IS_SERVER %}    command: agent -server -join {{ BOOTSTRAP_ADDRESS }} -domain {{ DOMAIN }} -node={{ HOSTNAME }} -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+{% else %}    command: agent -join {{ BOOTSTRAP_ADDRESS }} -domain {{ DOMAIN }} -node={{ HOSTNAME }} -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8
+{% endif %}    network_mode: host
+    volumes:
+      - consul-data:/consul/data
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+
+  sentinel:
+    image: sentinel:dev
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - CONSUL_ADDRESS=http://127.0.0.1:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
+      - DEBUG=1
+
+volumes:
+  consul-data:
+    driver: local

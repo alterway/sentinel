@@ -1,0 +1,119 @@
+version: "3.2"
+
+services:
+  # DEFINE ALL CONSUL SERVICES
+  #---------------------------
+  consul-{{ BOOTSTRAP_HOSTNAME }}:
+    image: consul
+    command: agent -server -bootstrap-expect 1 -domain {{ DOMAIN }} -node={{ BOOTSTRAP_HOSTNAME }} -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
+    networks:
+      - consul
+    volumes:
+      - consul-data:/consul/data
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    deploy:
+      labels:
+        not_register: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == {{ BOOTSTRAP_HOSTNAME }}
+{% for manager in MANAGERS_HOSTNAME %}{% if manager != BOOTSTRAP_HOSTNAME %}
+  consul-{{ manager }}:
+    image: consul
+    command: agent -server -join consul-{{ BOOTSTRAP_HOSTNAME }} -domain {{ DOMAIN }} -node={{ manager }} -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
+    networks:
+      - consul
+    volumes:
+      - consul-data:/consul/data
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    deploy:
+      labels:
+        not_register: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == {{ manager }}
+{% endif %}{% endfor %}{% for worker in WORKERS_HOSTNAME %}
+  consul-{{ worker }}:
+    image: consul
+    command: agent -join consul-{{ BOOTSTRAP_HOSTNAME }} -domain {{ DOMAIN }} -node={{ worker }} -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
+    networks:
+      - consul
+    volumes:
+      - consul-data:/consul/data
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    deploy:
+      labels:
+        not_register: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == {{ worker }}
+{% endfor %}
+  # DEFINE ALL SENTINEL SERVICES
+  #-----------------------------{% for manager in MANAGERS_HOSTNAME %}
+  sentinel-{{ manager }}:
+    image: sentinel:dev
+    networks:
+      - consul
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - CONSUL_ADDRESS=http://consul-{{ manager }}:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
+      - DEBUG=1
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == {{ manager }}
+{% endfor %}{% for worker in WORKERS_HOSTNAME %}
+  sentinel-{{ worker }}:
+    image: sentinel:dev
+    networks:
+      - consul
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - CONSUL_ADDRESS=http://consul-{{ worker }}:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
+      - DEBUG=1
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == {{ worker }}
+{% endfor %}
+volumes:
+  consul-data:
+    driver: local
+
+networks:
+  consul:
+    driver: overlay

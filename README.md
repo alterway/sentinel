@@ -29,9 +29,11 @@ services:
 
   sentinel:
     container_name: sentinel
-    image: hub.alterway.fr/sentinel
+    image: alterway/sentinel
     restart: always
     network_mode: host
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
     - consul
 ```
@@ -41,6 +43,15 @@ services:
 * `ORCHESTRATOR` : (default: swarm), to configure the cluster docker orchestrator, only swarm for now.
 * `CONSUL_ADDRESS`: (default: http://127.0.0.1:8500), the address to get consul catalog. You need to have an consul agent on all nodes because the address agent is the node cluster address to register services.
 * `DEBUG`: Add this to have debug logs level.
+
+**Use sentinel command to generate docker-compose files:**
+You can use command `create_config` to generate docker-compose files with consul and sentinel services.
+The files are writed in directory /config.
+To run help command :
+```
+docker run -it --rm -v /tmp/config:/config alterway/sentinel create_config --help
+```
+If you choose deployment-type swarmservices, you have to use command `docker stack deploy`to deploy, use `docker-compose` on each node if you choose compose.
 
 ## Register a service by sentinel
 If your service expose port on docker host, he will be registered by sentinel in consul except if it is a container with "network_mode: host"
@@ -52,4 +63,16 @@ If your service expose port on docker host, he will be registered by sentinel in
 * If your service expose several ports you don't want to register in consul, you have to add label or environment variable : `not_register` to your service. You can use `service_PORT_name` and `service_PORT_tags` to register service only for a port.
 
 ## Known issues
-A bug in swarm give node address 0.0.0.0 sometimes and the record for this node in consul is always in failed : `ERROR Failed to register service hello for node node3 : b'Invalid service address'`. You need to restart docker service on this node and all services will be synchronize and register.
+Sometimes swarm api give node address 0.0.0.0 and the record for this node in consul is always in failed : `ERROR Failed to register service hello for node node3 : b'Invalid service address'`. You need to restart docker service on this node and all services will be synchronize and register.
+
+## Contributing
+* Pull requests are welcome!
+* Use developer stack to start the service as developer on your local machine:
+  * You need to have `vagrant > 2.0`
+  * You need to have an NFS adapter to mount files on vagrant VM : `sudo apt-get install nfs-common nfs-kernel-server`
+  * You need to have `ansible > 2.0`
+  * Start stack : `make startstackdev`
+  * You must have a [consul ui](http://192.168.50.4:8500/ui)
+  * you need to rebuild and up sentinel inside vagrant VM to aply changement in code
+  * you have to write unit tests in "tests" directory of project
+  * to run tests : `make quality`

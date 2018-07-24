@@ -1,49 +1,94 @@
+"""Define dependencies injections"""
 import os
+import importlib
 
 
 def backend_adapter():
-    if os.environ.get('BACKEND') == "consul":
-        from adapters.backends.consul import ConsulAdapter
-        return ConsulAdapter()
+    """Return adapter for the desired backend"""
+    backend = os.environ.get("BACKEND") if os.environ.get("BACKEND") else "consul"
+    backend_class = getattr(
+        importlib.import_module('backends.%s' % backend),
+        backend.capitalize()
+    )
+    return backend_class()
 
 
 def orchestrator_adapter():
-    if os.environ.get('ORCHESTRATOR') == "swarm":
-        from adapters.orchestrators.swarm import SwarmAdapter
-        return SwarmAdapter
+    """Return adapter for the desired orchestrator"""
+    orchestrator = os.environ.get("ORCHESTRATOR") if os.environ.get("ORCHESTRATOR") else "swarm"
+    return getattr(
+        importlib.import_module('orchestrators.%s' % orchestrator),
+        orchestrator.capitalize()
+    )
 
 
 def docker_adapter():
-    from adapters.docker.docker_adapter import DockerAdapter
-    return DockerAdapter()
+    """Return adapter for the docker version"""
+    from docker_adapters.docker_adapter import DockerAdapter
+
+    if os.environ.get('ORCHESTRATOR') == 'swarm':
+        return swarm_adapter()
+
+    if os.environ.get('TESTING_MODE'):
+        docker_version = os.environ.get('TESTED_DOCKER_VERSION')
+    else:
+        docker_version = DockerAdapter.get_version()
+
+    try:
+        return getattr(
+            importlib.import_module('docker_adapters.docker_%s' % docker_version),
+            'DockerVersionAdapter'
+        )
+    except ImportError:
+        return DockerAdapter
+
+
+def swarm_adapter():
+    """Return adapter for the docker swarm version"""
+    from docker_adapters.swarm_adapter import SwarmAdapter
+
+    if os.environ.get('TESTING_MODE'):
+        docker_version = os.environ.get('TESTED_DOCKER_VERSION')
+    else:
+        docker_version = SwarmAdapter.get_version()
+
+    try:
+        return getattr(
+            importlib.import_module('docker_adapters.swarm_%s' % docker_version),
+            'SwarmVersionAdapter'
+        )
+    except ImportError:
+        return SwarmAdapter
 
 
 def container_adapter():
-    from adapters.docker.container_adapter import ContainerAdapter
-    return ContainerAdapter
+    """Return adapter to get container services"""
+    from service.container import Container
+    return Container
 
 
 def swarmservice_adapter():
-    from adapters.docker.swarmservice_adapter import SwarmServiceAdapter
-    return SwarmServiceAdapter
+    """Return adapter to get swarm services"""
+    from service.swarmservice import SwarmService
+    return SwarmService
 
 
-def logger():
+def get_logger():  # pylint: disable-msg=redefined-outer-name
+    """Return the sentinel logger"""
     import logging
-    return logging.getLogger('STDOUT')
+    logger = logging.getLogger('STDOUT')
+    if os.environ.get('TESTING_MODE'):
+        logger.setLevel('CRITICAL')
 
-
-def not_implemented():
-    from exceptions import not_implemented
-    return not_implemented
+    return logger
 
 
 DEPENDENCIES = {
     "backend_adapter": backend_adapter,
     "orchestrator_adapter": orchestrator_adapter,
     "docker_adapter": docker_adapter,
+    "swarm_adapter": swarm_adapter,
     "container_adapter": container_adapter,
     "swarmservice_adapter": swarmservice_adapter,
-    "not_implemented": not_implemented,
-    "logger": logger
+    "logger": get_logger
 }

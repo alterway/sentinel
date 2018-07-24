@@ -1,33 +1,16 @@
-from utils.dependencies_injection import inject_param
+"""Main module to listen events, get services and register them in backend"""
+import importlib
+import sys
+from dependencies_injection.inject_param import inject_param
+
 from utils.logger import set_logging
-import docker
-from datetime import datetime
-
-
-@inject_param('backend_adapter')
-@inject_param('orchestrator_adapter')
-@inject_param('logger')
-def process_event(event, backend_adapter=None, orchestrator_adapter=None, logger=None):
-    if event['Action'] == 'create':
-        # Ajout du service créé
-        logger.debug("Get event create : %s" % event)
-        services = orchestrator_adapter.get_service(event)
-        for service in services:
-            backend_adapter.register_service(service)
-    elif event['Action'] == 'remove' or event['Action'] == 'kill':
-        # Suppression du service
-        logger.debug("Get event remove : %s" % event)
-        tag_to_remove_on_backend = orchestrator_adapter.get_service_tag_to_remove(event)
-        if tag_to_remove_on_backend is not None:
-            backend_adapter.remove_service_with_tag(tag_to_remove_on_backend)
-    else:
-        orchestrator_adapter.process_event(event)
 
 
 @inject_param('backend_adapter')
 @inject_param('orchestrator_adapter')
 @inject_param('logger')
 def sync(backend_adapter=None, orchestrator_adapter=None, logger=None):
+    '''Sync register services with effective running services'''
     registered_services = backend_adapter.get_services()
     running_services = orchestrator_adapter.get_services()
 
@@ -48,15 +31,40 @@ def sync(backend_adapter=None, orchestrator_adapter=None, logger=None):
     logger.info("Synchonisation is done")
 
 
-@inject_param("logger")
-def listen_events(logger=None):
-    logger.info("Listen docker events...")
-    client = docker.DockerClient(base_url='unix://var/run/docker.sock', version='auto')
-    for event in client.events(since=datetime.utcnow(), decode=True):
-        process_event(event)
+@inject_param("orchestrator_adapter")
+def listen_events(orchestrator_adapter=None):
+    '''Start listen docker events'''
+    orchestrator_adapter.listen_events()
+
+
+def _get_kwargs_from_argv(argv):
+    kwargs = {}
+    for index, arg in enumerate(argv):
+        if index > 1:
+            if '--h' in arg:
+                kwargs['--help'] = True
+                break
+
+            argument_value = arg.split("=")
+            if len(argument_value) == 2:
+                kwargs[argument_value[0]] = argument_value[1]
+
+    return kwargs
 
 
 def main():
-    set_logging()
-    sync()
-    listen_events()
+    """
+    Main entry for sentinel program
+    Sync registred services with effective running services
+    and start listen docker events for services updates
+    """
+    if len(sys.argv) == 1:
+        set_logging()
+        sync()
+        listen_events()
+    else:
+        kwargs = _get_kwargs_from_argv(sys.argv)
+        getattr(
+            importlib.import_module('commands.%s' % sys.argv[1]),
+            'run'
+        )(**kwargs)

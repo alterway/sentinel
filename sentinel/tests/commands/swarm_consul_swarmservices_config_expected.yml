@@ -1,0 +1,178 @@
+version: "3.2"
+
+services:
+  # DEFINE ALL CONSUL SERVICES
+  #---------------------------
+  consul-node1:
+    image: consul
+    command: agent -server -bootstrap-expect 1 -domain docker.local -node=node1 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
+    networks:
+      - consul
+    volumes:
+      - consul-data:/consul/data
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    deploy:
+      labels:
+        not_register: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == node1
+
+  consul-node2:
+    image: consul
+    command: agent -server -join consul-node1 -domain docker.local -node=node2 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
+    networks:
+      - consul
+    volumes:
+      - consul-data:/consul/data
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    deploy:
+      labels:
+        not_register: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == node2
+
+  consul-node3:
+    image: consul
+    command: agent -server -join consul-node1 -domain docker.local -node=node3 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
+    networks:
+      - consul
+    volumes:
+      - consul-data:/consul/data
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    deploy:
+      labels:
+        not_register: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == node3
+
+  consul-node4:
+    image: consul
+    command: agent -join consul-node1 -domain docker.local -node=node4 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
+    ports:
+      - target: 8500
+        published: 8500
+        protocol: tcp
+        mode: host
+    networks:
+      - consul
+    volumes:
+      - consul-data:/consul/data
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    deploy:
+      labels:
+        not_register: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == node4
+
+  # DEFINE ALL SENTINEL SERVICES
+  #-----------------------------
+  sentinel-node1:
+    image: sentinel:dev
+    networks:
+      - consul
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - CONSUL_ADDRESS=http://consul-node1:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
+      - DEBUG=1
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == node1
+
+  sentinel-node2:
+    image: sentinel:dev
+    networks:
+      - consul
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - CONSUL_ADDRESS=http://consul-node2:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
+      - DEBUG=1
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == node2
+
+  sentinel-node3:
+    image: sentinel:dev
+    networks:
+      - consul
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - CONSUL_ADDRESS=http://consul-node3:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
+      - DEBUG=1
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == node3
+
+  sentinel-node4:
+    image: sentinel:dev
+    networks:
+      - consul
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - CONSUL_ADDRESS=http://consul-node4:8500
+      - BACKEND=consul
+      - ORCHESTRATOR=swarm
+      - DEBUG=1
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == node4
+
+volumes:
+  consul-data:
+    driver: local
+
+networks:
+  consul:
+    driver: overlay

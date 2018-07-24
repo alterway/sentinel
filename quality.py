@@ -75,12 +75,47 @@ if __name__ == '__main__':
     FORMAT = '%(message)s'
     logging.basicConfig(format=FORMAT, level=logging.DEBUG)
     logging.StreamHandler.emit = add_coloring_to_emit_ansi(logging.StreamHandler.emit)
-
+    chdir = '/usr/local/lib/python3.6/site-packages'
     errors = 0
-    errors += run(command='pip install -e .', chdir='.', action='Install require')
-    errors += run(command='pip install -e .[ci]', chdir='.', action='Install require for tests')
-    errors += run(command='coverage run -m unittest', chdir='sentinel', action="Unit tests", silent=False)
-    errors += run(command='coverage report --omit=/virtualenvs/*,testing/*,*tests*,utils/*,di.py,models.py,exceptions.py -m', chdir='sentinel', action="Coverage report", silent=False)
-    errors += run(command='flake8 --ignore=E501 .', chdir='sentinel', action="Code sniffer")
+    errors += run(
+        command='pip install -e .[ci]',
+        chdir=chdir,
+        action='Install require for tests'
+    )
+    errors += run(
+        command='coverage run --pylib -m unittest',
+        chdir="%s/sentinel" % chdir,
+        action="Unit tests",
+        silent=False
+    )
+    errors += run(
+        command='coverage report --include=/usr/local/lib/python3.6/site-packages/sentinel* -m',
+        chdir="%s/sentinel" % chdir,
+        action="Coverage report",
+        silent=False
+    )
+    errors += run(
+        command='flake8 --ignore=E501 .',
+        chdir='%s/sentinel' % chdir,
+        action="Code sniffer"
+    )
+    errors += run(
+        command='pylint --ignore=tests -r y sentinel',
+        chdir=chdir,
+        action="Python linter",
+        silent=False
+    )
+    errors += run(
+        command="radon mi -i tests -s sentinel",
+        chdir=chdir,
+        action="Verify project maintainability",
+        silent=False
+    )
+    errors += run(
+        command="xenon --max-absolute B --max-modules A --max-average A sentinel",
+        chdir=chdir,
+        action="Verify project cyclomatic complexity",
+        silent=False
+    )
 
-    sys.exit(0 if errors == 0 else 1)
+    sys.exit(0 if not errors else 1)
