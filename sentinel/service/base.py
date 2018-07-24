@@ -4,18 +4,18 @@ import re
 
 
 class ServiceInterface(Interface):  # pylint: disable-msg=inherit-non-class
-    """Interface to manage docker service
-    """
-    def get_services(cls, **kwargs):  # pylint: disable-msg=no-method-argument
-        """Create services object from docker services"""
+    '''Interface to manage docker service'''
 
-    def get_services_from_id(cls, service_id, **kwargs):
-        """Create services object from one docker service"""
+    def get_services(cls, **kwargs):  # pylint: disable-msg=no-method-argument  # noqa
+        '''Create services object from docker services'''
+
+    def get_services_from_id(cls, service_id, **kwargs): # noqa
+        '''Create services object from one docker service'''
 
 
 class ServiceBase(object):
-    """Adapter to manage docker service
-    """
+    '''Adapter to manage docker service'''
+
     @classmethod
     def _has_to_be_registred(cls, labels, envs, internal_port):
         labels.update(cls._get_envs_to_dict(envs))
