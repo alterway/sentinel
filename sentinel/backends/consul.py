@@ -1,13 +1,17 @@
-from backends.backend import Backend
-from models import Service, Node
-from utils.dependencies_injection import inject_param
+from dependencies_injection.inject_param import inject_param
+from zope.interface import implementer
 import os
 import requests
 import json
 import time
 
+from backends.backend import Backend
+from models import Service, Node
 
-class Consul(Backend):
+
+@implementer(Backend)
+class Consul(object):
+
     def __init__(self):
         self.address = os.environ.get(
             'CONSUL_ADDRESS'
@@ -91,7 +95,7 @@ class Consul(Backend):
         services = self.get_services()
         service_to_remove = [service for service in services if tag in service.tags]
 
-        if len(service_to_remove) != 0:
+        if service_to_remove:
             self.deregister_service(service_to_remove[0])
         else:
             logger.debug("Service with tag %s not found in consul" % tag)

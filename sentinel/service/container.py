@@ -1,9 +1,12 @@
-from utils.dependencies_injection import inject_param
-from service.service_base import ServiceBase
-from models import Service, Node
+from dependencies_injection.inject_param import inject_param
+from zope.interface import implementer
 import time
 
+from service.base import ServiceInterface, ServiceBase
+from models import Service, Node
 
+
+@implementer(ServiceInterface)
 class Container(ServiceBase):
     """ Adapter to manage docker container as service
     """
@@ -23,8 +26,8 @@ class Container(ServiceBase):
         return services
 
     @classmethod
-    def get_services_from_id(cls, container_id):
-        return cls._get_services_object(container_id)
+    def get_services_from_id(cls, service_id):
+        return cls._get_services_object(service_id)
 
     @classmethod
     @inject_param('docker_adapter')
@@ -41,7 +44,7 @@ class Container(ServiceBase):
 
         exposed_ports = docker_adapter.get_container_exposed_ports(container)
         services = []
-        if len(exposed_ports) == 0:
+        if not exposed_ports:
             logger.info('Ignored Service : %s don\'t publish port' % docker_adapter.get_container_name(container))
         else:
             tags = ['container:%s' % container.id]

@@ -1,24 +1,23 @@
-from utils.dependencies_injection import inject_param
+from dependencies_injection.inject_param import inject_param
+from zope.interface import Interface
 import re
 
 
-class ServiceBase():
+class ServiceInterface(Interface):  # pylint: disable-msg=inherit-non-class
+    """Interface to manage docker service
+    """
+    def get_services(cls, **kwargs):  # pylint: disable-msg=no-method-argument
+        """Create services object from docker services"""
+
+    def get_services_from_id(cls, service_id, **kwargs):
+        """Create services object from one docker service"""
+
+
+class ServiceBase(object):
     """Adapter to manage docker service
     """
-
     @classmethod
-    @inject_param("not_implemented")
-    def get_services(cls, not_implemented=None):
-        not_implemented(cls.__class__.__name__)
-
-    @classmethod
-    @inject_param("not_implemented")
-    def get_services_from_id(cls, not_implemented=None):
-        not_implemented(cls.__class__.__name__)
-
-    @classmethod
-    @inject_param('logger')
-    def _has_to_be_registred(cls, labels, envs, internal_port, logger=None):
+    def _has_to_be_registred(cls, labels, envs, internal_port):
         labels.update(cls._get_envs_to_dict(envs))
 
         if "not_register" in labels:
@@ -46,8 +45,7 @@ class ServiceBase():
         return list(set(tags))
 
     @classmethod
-    @inject_param('logger')
-    def _get_name_from_label_and_envs(cls, labels, envs, internal_port, logger=None):
+    def _get_name_from_label_and_envs(cls, labels, envs, internal_port):
         keys = ['service_name', 'service_%s_name' % internal_port]
         envs_dict = cls._get_envs_to_dict(envs)
 

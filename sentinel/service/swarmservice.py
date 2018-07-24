@@ -1,9 +1,12 @@
-from utils.dependencies_injection import inject_param
-from service.service_base import ServiceBase
+from dependencies_injection.inject_param import inject_param
+from zope.interface import implementer
+
+from service.base import ServiceInterface, ServiceBase
 from models import Node, Service
 from exceptions import InvalidIPAddress
 
 
+@implementer(ServiceInterface)
 class SwarmService(ServiceBase):
     """ Adaper to manage docker swarm service as service
     """
@@ -27,8 +30,8 @@ class SwarmService(ServiceBase):
     def get_services_from_id(cls, service_id, swarm_adapter=None):
         if swarm_adapter.is_manager():
             return cls._get_services_object(swarm_adapter.get_swarm_service_by_id(service_id))
-        else:
-            return []
+
+        return []
 
     @classmethod
     @inject_param('swarm_adapter')
@@ -36,12 +39,12 @@ class SwarmService(ServiceBase):
     def _get_services_object(cls, service, swarm_adapter=None, logger=None):
         exposed_ports = swarm_adapter.get_swarmservice_exposed_ports(service)
         services = []
-        if len(exposed_ports) == 0:
+        if not exposed_ports:
             logger.info('Ignored Service : %s don\'t publish port' % swarm_adapter.get_swarmservice_name(service))
         else:
             all_nodes = cls._get_all_nodes()
             running_nodes = cls._get_nodes_running_service(service)
-            if len(all_nodes) == 0 and len(running_nodes) == 0:
+            if not all_nodes and not running_nodes:
                 logger.info('Ignored Service: %s don\'t run in available host' % swarm_adapter.get_swarmservice_name(service))
             else:
                 tags = ['swarm-service:%s' % service.id]
@@ -62,15 +65,14 @@ class SwarmService(ServiceBase):
                             )
                         )
 
-            for service in services:
-                logger.debug(": %s" % service.__dict__)
+            for srv in services:
+                logger.debug(": %s" % srv.__dict__)
 
         return services
 
     @classmethod
     @inject_param('swarm_adapter')
-    @inject_param('logger')
-    def _get_all_nodes(cls, swarm_adapter=None, logger=None):
+    def _get_all_nodes(cls, swarm_adapter=None):
         all_nodes = []
 
         for node in swarm_adapter.list_nodes():

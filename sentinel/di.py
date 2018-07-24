@@ -75,11 +75,6 @@ def logger():
     return logger
 
 
-def not_implemented():
-    from exceptions import not_implemented
-    return not_implemented
-
-
 DEPENDENCIES = {
     "backend_adapter": backend_adapter,
     "orchestrator_adapter": orchestrator_adapter,
@@ -87,6 +82,5 @@ DEPENDENCIES = {
     "swarm_adapter": swarm_adapter,
     "container_adapter": container_adapter,
     "swarmservice_adapter": swarmservice_adapter,
-    "not_implemented": not_implemented,
     "logger": logger
 }

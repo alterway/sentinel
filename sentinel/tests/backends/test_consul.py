@@ -1,16 +1,22 @@
-from backends.consul import Consul
-from docker_adapters.docker_adapter import DockerAdapter
-from utils.test_utilities import StubResponse
 import unittest
 from mock import patch
 import requests
+from zope.interface.verify import verifyObject
+from utils.test_utilities import StubResponse
+
 from models import Service, Node
+from backends.backend import Backend
+from backends.consul import Consul
+from docker_adapters.docker_adapter import DockerAdapter
 
 
 class TestConsul(unittest.TestCase):
 
     def setUp(self):
         self.consul_adapter = Consul()
+
+    def test_backend_interface_implementation(self):
+        self.assertEqual(True, verifyObject(Backend, self.consul_adapter))
 
     @patch.object(requests, 'get', side_effect=[
         StubResponse(

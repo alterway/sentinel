@@ -1,25 +1,17 @@
-from utils.dependencies_injection import inject_param
+from zope.interface import Interface
 
 
-class Orchestrator():
-    """Interface to create orchestrator adapters
-    """
-    @classmethod
-    @inject_param("not_implemented")
-    def listen_events(cls, not_implemented=None):
-        not_implemented(cls.__class__.__name__)
+class Orchestrator(Interface):  # pylint: disable-msg=inherit-non-class
+    """Interface to create orchestrator adapters"""
 
-    @classmethod
-    @inject_param("not_implemented")
-    def get_services(cls, not_implemented=None):
-        not_implemented(cls.__class__.__name__)
+    def listen_events(*args, **kwargs):  # pylint: disable-msg=no-method-argument
+        """Listen docker events"""
 
-    @classmethod
-    @inject_param("not_implemented")
-    def get_service(cls, not_implemented=None):
-        not_implemented(cls.__class__.__name__)
+    def get_services(*args, **kwargs):  # pylint: disable-msg=no-method-argument
+        """Get docker running services"""
 
-    @classmethod
-    @inject_param("not_implemented")
-    def get_service_tag_to_remove(cls, not_implemented=None):
-        not_implemented(cls.__class__.__name__)
+    def get_service(*args, **kwargs):  # pylint: disable-msg=no-method-argument
+        """Get services objects from one docker service"""
+
+    def get_service_tag_to_remove(*args, **kwargs):  # pylint: disable-msg=no-method-argument
+        """Get tag for service to remove"""

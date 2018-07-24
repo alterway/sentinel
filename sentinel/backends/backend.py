@@ -1,19 +1,16 @@
-from utils.dependencies_injection import inject_param
+from zope.interface import Interface, Attribute
 
 
-class Backend():
+class Backend(Interface):  # pylint: disable-msg=inherit-non-class
+    """Interface to create backend adapters"""
 
-    @classmethod
-    @inject_param("not_implemented")
-    def get_services(cls, not_implemented=None):
-        not_implemented(cls.__class__.__name__)
+    address = Attribute("""Address to get backend""")
 
-    @classmethod
-    @inject_param("not_implemented")
-    def register_service(cls, not_implemented=None):
-        not_implemented(cls.__class__.__name__)
+    def get_services(docker_adapter=None, logger=None):
+        """Get service in backend"""
 
-    @classmethod
-    @inject_param("not_implemented")
-    def deregister_node(cls, not_implemented=None):
-        not_implemented(cls.__class__.__name__)
+    def register_service(service, logger=None):
+        """Register a service in backend"""
+
+    def deregister_node(service, logger=None):
+        """Deregister a service in backend"""

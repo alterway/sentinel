@@ -2,7 +2,7 @@ import docker
 import os
 
 
-class DockerAdapter():
+class DockerAdapter(object):
     """Adapter to request docker API
     """
     @classmethod
@@ -50,14 +50,14 @@ class DockerAdapter():
     def get_container_name(container):
         if 'com.docker.compose.service' in container.attrs['Config']['Labels']:
             return container.attrs['Config']['Labels']['com.docker.compose.service']
-        else:
-            return container.attrs['Name'].replace('/', '')
+
+        return container.attrs['Name'].replace('/', '')
 
     @staticmethod
     def get_container_exposed_ports(container):
         ports = []
         for key in container.attrs['NetworkSettings']['Ports'].keys():
-            if container.attrs['NetworkSettings']['Ports'][key] is not None and len(container.attrs['NetworkSettings']['Ports'][key][0]['HostPort']) != 0:
+            if container.attrs['NetworkSettings']['Ports'][key] and container.attrs['NetworkSettings']['Ports'][key][0]['HostPort']:
                 ports.append({
                     'internal_port': int(key.replace('/tcp', '').replace('/udp', '')),
                     'external_port': int(container.attrs['NetworkSettings']['Ports'][key][0]['HostPort'])

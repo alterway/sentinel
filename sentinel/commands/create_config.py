@@ -1,4 +1,4 @@
-from utils.dependencies_injection import inject_param
+from dependencies_injection.inject_param import inject_param
 from jinja2 import Environment, PackageLoader, select_autoescape
 import sys
 import os
@@ -27,12 +27,12 @@ def run(**kwargs):
             sys.exit(1)
 
 
-class SwarmNodesConfig():
+class SwarmNodesConfig(object):
     @inject_param('logger')
     def __init__(
         self, managers_hostname, workers_hostname='', bootstrap_address=None,
         deployment_type='swarmservices', domain='docker.local', logger=None
-    ):
+    ):  # pylint: disable-msg=too-many-arguments
         deployment_type_choices = ["swarmservices", "compose"]
         if deployment_type not in deployment_type_choices:
             logger.error("%s is not a valid deployment_type : %s" % (
@@ -88,7 +88,7 @@ class SwarmNodesConfig():
             )
 
         # Write all docker-compose files
-        for node in nodes_config.keys():
+        for node in nodes_config:
             self._write(
                 config=nodes_config[node],
                 filename='docker-compose-%s.yml' % node
@@ -113,7 +113,7 @@ class SwarmNodesConfig():
             f.write(config)
 
 
-class ConfigManager():
+class ConfigManager(object):
 
     @classmethod
     @inject_param('logger')
@@ -155,7 +155,8 @@ class ConfigManager():
         else:
             logger.error(
                 'Create config failed : swarm managers hostname need to be specified with'
-                ' parameter "--swarm-managers-hostname"')
+                ' parameter "--swarm-managers-hostname"'
+            )
             sys.exit(1)
 
         swarm_config.generate()

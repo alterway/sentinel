@@ -1,16 +1,22 @@
+from zope.interface.verify import verifyObject
+from mock import patch
+import unittest
+
+from orchestrators.orchestrator import Orchestrator
 from orchestrators.swarm import Swarm
 from docker_adapters.swarm_adapter import SwarmAdapter
 from service.container import Container
 from service.swarmservice import SwarmService
 from backends.consul import Consul
 from models import Service, Node
-from mock import patch
-import unittest
 
 
 class TestSwarm(unittest.TestCase):
     def setUp(self):
         self.swarm_adapter = Swarm()
+
+    def test_orchestrator_interface_implementation(self):
+        self.assertEqual(True, verifyObject(Orchestrator, self.swarm_adapter))
 
     @patch.object(SwarmAdapter, 'is_manager', return_value=True)
     @patch.object(SwarmAdapter, 'get_swarm_services', return_value=['service1'])

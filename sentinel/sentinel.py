@@ -1,7 +1,8 @@
-from utils.dependencies_injection import inject_param
-from utils.logger import set_logging
+from dependencies_injection.inject_param import inject_param
 import importlib
 import sys
+
+from utils.logger import set_logging
 
 
 @inject_param('backend_adapter')
@@ -29,8 +30,7 @@ def sync(backend_adapter=None, orchestrator_adapter=None, logger=None):
 
 
 @inject_param("orchestrator_adapter")
-@inject_param("logger")
-def listen_events(orchestrator_adapter=None, logger=None):
+def listen_events(orchestrator_adapter=None):
     orchestrator_adapter.listen_events()
 
 

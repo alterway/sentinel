@@ -1,5 +1,4 @@
-from service.service_base import ServiceBase
-from exceptions import NotImplementedException
+from service.base import ServiceBase
 import unittest
 
 
@@ -10,22 +9,6 @@ class TestServiceBase(unittest.TestCase):
                 pass
 
         self.service_adapter = NewServiceAdapter()
-
-    def test_get_services_not_implemented(self):
-        with self.assertRaises(NotImplementedException) as e:
-            self.service_adapter.get_services()
-            self.assertEquals(
-                "Methode get_services is not implemented for NewServiceAdapter",
-                e.message
-            )
-
-    def test_get_services_from_id_not_implemented(self):
-        with self.assertRaises(NotImplementedException) as e:
-            self.service_adapter.get_services_from_id()
-            self.assertEquals(
-                "Methode get_services_from_id is not implemented for NewServiceAdapter",
-                e.message
-            )
 
     def test_get_tags(self):
         self.assertEqual(

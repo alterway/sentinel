@@ -1,10 +1,13 @@
-from orchestrators.orchestrator import Orchestrator
-from utils.dependencies_injection import inject_param
+from dependencies_injection.inject_param import inject_param
+from zope.interface import implementer
 from datetime import datetime
 import time
 
+from orchestrators.orchestrator import Orchestrator
 
-class Swarm(Orchestrator):
+
+@implementer(Orchestrator)
+class Swarm(object):
     """ This class permit to get services in swarm cluster
     """
     @classmethod
@@ -30,7 +33,7 @@ class Swarm(Orchestrator):
     @staticmethod
     @inject_param('swarmservice_adapter')
     @inject_param('container_adapter')
-    def get_service(event, swarm_adapter=None, swarmservice_adapter=None, container_adapter=None):
+    def get_service(event, swarmservice_adapter=None, container_adapter=None):
         """Get services from one docker service (container or swarm service)
         """
         if event['Type'] == 'service':
@@ -50,9 +53,9 @@ class Swarm(Orchestrator):
             return 'swarm-service:%s' % event['Actor']['ID']
         elif event['Type'] == 'container' and 'com.docker.swarm.service.name' not in event['Actor']['Attributes']:
             return 'container:%s' % event['Actor']['ID']
-        else:
-            logger.debug("No tag to remove")
-            return None
+
+        logger.debug("No tag to remove")
+        return None
 
     @classmethod
     @inject_param('logger')
@@ -73,9 +76,8 @@ class Swarm(Orchestrator):
             backend_adapter.register_service(service)
 
     @classmethod
-    @inject_param("backend_adapter")
     @inject_param("logger")
-    def _process_service_update(cls, event, backend_adapter=None, logger=None):
+    def _process_service_update(cls, event, logger=None):
         logger.debug('Event Update : %s' % event)
         if event['Type'] == 'node':
             attrs = event['Actor']['Attributes']

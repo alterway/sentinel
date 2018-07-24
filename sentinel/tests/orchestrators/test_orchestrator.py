@@ -1,45 +1,43 @@
-from orchestrators.orchestrator import Orchestrator
-from exceptions import NotImplementedException
 import unittest
+from zope.interface import implementer
+from zope.interface.exceptions import BrokenImplementation
+from zope.interface.verify import verifyObject
+
+from orchestrators.orchestrator import Orchestrator
 
 
 class TestOrchestrator(unittest.TestCase):
     def setUp(self):
 
-        class NewOrchestrator(Orchestrator):
+        @implementer(Orchestrator)
+        class NewBadOrchestrator(object):
             def __init__(self):
                 pass
 
-        self.orchestrator = NewOrchestrator()
+        @implementer(Orchestrator)
+        class NewGoodOrchestrator(object):
+            @classmethod
+            def listen_events(*args, **kwargs):
+                return "Listen docker events"
 
-    def test_listen_events_not_implemented(self):
-        with self.assertRaises(NotImplementedException) as e:
-            self.orchestrator.listen_events()
-            self.assertEquals(
-                "Methode listen_events is not implemented for NewOrchestrator",
-                e.message
-            )
+            @classmethod
+            def get_services(*args, **kwargs):
+                return "Get docker running services"
 
-    def test_get_services_not_implemented(self):
-        with self.assertRaises(NotImplementedException) as e:
-            self.orchestrator.get_services()
-            self.assertEquals(
-                "Methode get_services is not implemented for NewOrchestrator",
-                e.message
-            )
+            @classmethod
+            def get_service(*args, **kwargs):
+                return "Get services objects from one docker service"
 
-    def test_get_service_not_implemented(self):
-        with self.assertRaises(NotImplementedException) as e:
-            self.orchestrator.get_service()
-            self.assertEquals(
-                "Methode get_service is not implemented for NewOrchestrator",
-                e.message
-            )
+            @classmethod
+            def get_service_tag_to_remove(*args, **kwargs):
+                return "Get tag for service to remove"
 
-    def test_get_service_tag_to_remove_not_implemented(self):
-        with self.assertRaises(NotImplementedException) as e:
-            self.orchestrator.get_service_tag_to_remove()
-            self.assertEquals(
-                "Methode get_service_tag_to_remove is not implemented for NewOrchestrator",
-                e.message
-            )
+        self.bad_orchestrator = NewBadOrchestrator()
+        self.good_orchestrator = NewGoodOrchestrator()
+
+    def test_bad_interface_implementation(self):
+        with self.assertRaises(BrokenImplementation):
+            verifyObject(Orchestrator, self.bad_orchestrator)
+
+    def test_interface_implementation_success(self):
+        self.assertEqual(True, verifyObject(Orchestrator, self.good_orchestrator))
