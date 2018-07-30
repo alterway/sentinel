@@ -1,6 +1,6 @@
 FROM python:3.6-alpine
 
-WORKDIR /usr/local/lib/python3.6/site-packages
+WORKDIR /opt
 
 COPY sentinel sentinel
 COPY setup.py .
