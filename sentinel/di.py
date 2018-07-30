@@ -24,7 +24,7 @@ def orchestrator_adapter():
 
 def docker_adapter():
     """Return adapter for the docker version"""
-    from docker_adapters.docker_adapter import DockerAdapter
+    from docker_adapters.base import DockerAdapter
 
     if os.environ.get('ORCHESTRATOR') == 'swarm':
         return swarm_adapter()
@@ -36,7 +36,7 @@ def docker_adapter():
 
     try:
         return getattr(
-            importlib.import_module('docker_adapters.docker_%s' % docker_version),
+            importlib.import_module('docker_adapters.version_%s' % docker_version),
             'DockerVersionAdapter'
         )
     except ImportError:
@@ -45,7 +45,7 @@ def docker_adapter():
 
 def swarm_adapter():
     """Return adapter for the docker swarm version"""
-    from docker_adapters.swarm_adapter import SwarmAdapter
+    from docker_adapters.base import SwarmAdapter
 
     if os.environ.get('TESTING_MODE'):
         docker_version = os.environ.get('TESTED_DOCKER_VERSION')
@@ -54,7 +54,7 @@ def swarm_adapter():
 
     try:
         return getattr(
-            importlib.import_module('docker_adapters.swarm_%s' % docker_version),
+            importlib.import_module('docker_adapters.version_%s' % docker_version),
             'SwarmVersionAdapter'
         )
     except ImportError:
