@@ -4,8 +4,7 @@ from zope.interface.verify import verifyObject
 
 from service.base import ServiceInterface
 from service.container import Container as ContainerAdapter
-from docker_adapters.docker_adapter import DockerAdapter
-from docker_adapters.swarm_adapter import SwarmAdapter
+from docker_adapters.base import DockerAdapter, SwarmAdapter
 from utils.test_utilities import Container
 
 

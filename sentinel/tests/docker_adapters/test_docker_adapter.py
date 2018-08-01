@@ -1,4 +1,4 @@
-from docker_adapters.docker_adapter import DockerAdapter
+from docker_adapters.base import DockerAdapter
 from utils.test_utilities import Container, StubDockerSocket
 from mock import patch
 import unittest

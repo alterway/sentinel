@@ -145,4 +145,3 @@ class SwarmAdapter(DockerAdapter):
         ] if 'Env' in swarmservice.attrs['Spec']['TaskTemplate']['ContainerSpec'] else []
 
         return labels, envs
-

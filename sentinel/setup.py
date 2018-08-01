@@ -1,3 +1,7 @@
+"""
+sentinel package installation
+Create console entrypoint "sentinel" to execute sentinel commands
+"""
 from setuptools import setup, find_packages
 
 
@@ -8,10 +12,9 @@ setup(
     author='Ophélie Mauger',
     author_email='ophelie.mauger@alterway.fr',
     entry_points={
-        'console_scripts': ['sentinel=sentinel.sentinel:main']
+        'console_scripts': ['sentinel=sentinel:main']
     },
-    package_dir={'': 'sentinel'},
-    packages=find_packages(where="sentinel"),
+    packages=find_packages(where='.'),
     install_requires=[
         "docker==3.0.*",
         "requests==2.18.*",

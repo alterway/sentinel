@@ -75,21 +75,21 @@ if __name__ == '__main__':
     FORMAT = '%(message)s'
     logging.basicConfig(format=FORMAT, level=logging.DEBUG)
     logging.StreamHandler.emit = add_coloring_to_emit_ansi(logging.StreamHandler.emit)
-    chdir = '/usr/local/lib/python3.6/site-packages'
+    chdir = sys.argv[1]
     errors = 0
     errors += run(
         command='pip install -e .[ci]',
-        chdir=chdir,
+        chdir="%s/sentinel" % chdir,
         action='Install require for tests'
     )
     errors += run(
-        command='coverage run --pylib -m unittest',
+        command='coverage run -m unittest',
         chdir="%s/sentinel" % chdir,
         action="Unit tests",
         silent=False
     )
     errors += run(
-        command='coverage report --include=/usr/local/lib/python3.6/site-packages/sentinel* -m',
+        command='coverage report -m',
         chdir="%s/sentinel" % chdir,
         action="Coverage report",
         silent=False

@@ -3,7 +3,7 @@ from mock import patch
 from zope.interface.verify import verifyObject
 
 
-from docker_adapters.swarm_adapter import SwarmAdapter
+from docker_adapters.base import SwarmAdapter
 from service.base import ServiceInterface
 from service.swarmservice import SwarmService as SwarmServiceAdapter
 from utils.test_utilities import SwarmNode, SwarmService

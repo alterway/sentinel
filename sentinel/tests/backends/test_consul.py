@@ -7,7 +7,7 @@ from utils.test_utilities import StubResponse
 from models import Service, Node
 from backends.backend import Backend
 from backends.consul import Consul
-from docker_adapters.docker_adapter import DockerAdapter
+from docker_adapters.base import DockerAdapter
 
 
 class TestConsul(unittest.TestCase):

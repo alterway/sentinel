@@ -3,8 +3,7 @@ FROM sentinel:dev
 ENV TESTING_MODE=1 TESTED_DOCKER_VERSION=18_06 LOCAL_IP_ADDRESS=192.168.50.4
 
 RUN apk add --update --no-cache gcc libc-dev
-COPY quality.py /usr/local/lib/python3.6/site-packages/quality.py
-COPY setup.py /usr/local/lib/python3.6/site-packages/setup.py
+COPY quality.py .
 
 
-RUN python quality.py
+RUN python quality.py /opt

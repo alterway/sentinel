@@ -4,7 +4,7 @@ import unittest
 
 from orchestrators.orchestrator import Orchestrator
 from orchestrators.swarm import Swarm
-from docker_adapters.swarm_adapter import SwarmAdapter
+from docker_adapters.base import SwarmAdapter
 from service.container import Container
 from service.swarmservice import SwarmService
 from backends.consul import Consul
