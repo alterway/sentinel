@@ -2,5 +2,5 @@
 
 docker build --pull -t sentinel:dev .
 docker build -t sentinel:quality -f DockerfileQuality .
-docker run -it --rm sentinel:quality
+docker run -t --rm sentinel:quality
 docker rmi sentinel:quality
