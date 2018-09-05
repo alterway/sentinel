@@ -1,6 +1,6 @@
 """Main module to listen events, get services and register them in backend"""
-import importlib
 import sys
+import importlib
 from dependencies_injection.inject_param import inject_param
 
 from utils.logger import set_logging

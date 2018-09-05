@@ -23,6 +23,6 @@ setup(
         'dependencies-injection==1.0'
     ],
     extras_require={
-        'ci': ['mock', 'flake8', 'coverage', 'pylint', 'radon', 'xenon'],
+        'ci': ['mock', 'pyinspector'],
     }
 )

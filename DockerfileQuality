@@ -2,8 +2,10 @@ FROM sentinel:dev
 
 ENV TESTING_MODE=1 TESTED_DOCKER_VERSION=18_06 LOCAL_IP_ADDRESS=192.168.50.4
 
-RUN apk add --update --no-cache gcc libc-dev
+RUN apk add --update --no-cache gcc libc-dev \
+	&& pip install sentinel['ci']
+
 COPY quality.py .
 
-
-RUN python quality.py /opt
+ENTRYPOINT ["pyinspector"]
+CMD ["/opt/sentinel"]
