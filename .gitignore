@@ -1,6 +1,10 @@
-# Created by .ignore support plugin (hsz.mobi)
+.git
 .idea/
 *.pyc
 *egg-info*
 .coverage
-
+*.vagrant/
+*join-swarm.cmd
+*playbook.retry
+*console.log
+developer-stack/swarm/docker-compose.yml
