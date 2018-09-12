@@ -12,9 +12,9 @@ setup(
     author='Ophélie Mauger',
     author_email='ophelie.mauger@alterway.fr',
     entry_points={
-        'console_scripts': ['sentinel=sentinel:main']
+        'console_scripts': ['sentinel=sentinel.__main__:main']
     },
-    packages=find_packages(where='.'),
+    packages=['sentinel'],
     install_requires=[
         "docker==3.0.*",
         "requests==2.18.*",
