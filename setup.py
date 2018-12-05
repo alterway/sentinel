@@ -17,7 +17,7 @@ setup(
     packages=['sentinel'],
     install_requires=[
         "docker==3.0.*",
-        "requests==2.18.*",
+        "requests==2.20.*",
         "jinja2==2.10.*",
         "zope.interface==4.5.*",
         'dependencies-injection==1.0'
