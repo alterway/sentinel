@@ -2,19 +2,19 @@ import unittest
 from mock import patch
 from zope.interface.verify import verifyObject
 
-from service.base import ServiceInterface
-from service.container import Container as ContainerAdapter
-from docker_adapters.base import DockerAdapter, SwarmAdapter
-from utils.test_utilities import Container
+from discovery.layers.service import ServiceInterface
+from discovery.layers.service import Container as ContainerAdapter
+from discovery import DockerAdapter, SwarmAdapter
+from discovery import Container
 
 
 class TestContainerAdapter(unittest.TestCase):
 
     def setUp(self):
-        self.container_adapter = ContainerAdapter()
+        self.service_container = ContainerAdapter()
 
     def test_service_interface_implementation(self):
-        self.assertEqual(True, verifyObject(ServiceInterface, self.container_adapter))
+        self.assertEqual(True, verifyObject(ServiceInterface, self.service_container))
 
     @patch.object(DockerAdapter, 'get_container_from_id', return_value=Container(
         container_id='92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04',
@@ -33,7 +33,7 @@ class TestContainerAdapter(unittest.TestCase):
     @patch.object(SwarmAdapter, 'get_local_node_name', return_value='node1')
     @patch.object(SwarmAdapter, 'get_local_node_address', return_value='192.168.50.4')
     def test_get_services_object(self, mock_get_local_node_address, mock_get_local_node_name, mock__get_container_labels_and_vars, mock_get_container_exposed_ports, mock_get_container_from_id):
-        services = self.container_adapter._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
+        services = self.service_container._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
         mock_get_container_from_id.assert_called_once()
         mock_get_container_exposed_ports.assert_called_once()
         self.assertEqual(1, mock__get_container_labels_and_vars.call_count)
@@ -78,7 +78,7 @@ class TestContainerAdapter(unittest.TestCase):
     @patch.object(SwarmAdapter, 'get_local_node_name', return_value='node1')
     @patch.object(SwarmAdapter, 'get_local_node_address', return_value='192.168.50.4')
     def test_get_services_object_not_running_first_time(self, mock_get_local_node_address, mock_get_local_node_name, mock__get_container_labels_and_vars, mock_get_container_exposed_ports, mock_get_container_from_id):
-        services = self.container_adapter._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
+        services = self.service_container._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
         self.assertEqual(2, mock_get_container_from_id.call_count)
         mock_get_container_exposed_ports.assert_called_once()
         mock__get_container_labels_and_vars.assert_called_once()
@@ -108,7 +108,7 @@ class TestContainerAdapter(unittest.TestCase):
     @patch.object(DockerAdapter, 'get_local_node_name', return_value=None)
     @patch.object(DockerAdapter, 'get_local_node_address', return_value=None)
     def test_get_services_object_not_exposed_port(self, mock_get_local_node_address, mock_get_local_node_name, mock__get_container_labels_and_vars, mock_get_container_exposed_ports, mock_get_container_from_id):
-        services = self.container_adapter._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
+        services = self.service_container._get_services_object('92aa516a0cef6dbba682011c3ecc2f57036852f0658e51ba5f1f364419b95d04')
         mock_get_container_from_id.assert_called_once()
         mock_get_container_exposed_ports.assert_called_once()
         mock__get_container_labels_and_vars.assert_not_called()
@@ -131,7 +131,7 @@ class TestContainerAdapter(unittest.TestCase):
     @patch.object(SwarmAdapter, 'get_local_node_name', return_value='node1')
     @patch.object(SwarmAdapter, 'get_local_node_address', return_value='192.168.50.4')
     def test_get_services(self, mock_get_node_address, mock_get_node_name, mock_get_container_from_id, mock_list_containers):
-        self.assertEqual(3, len(self.container_adapter.get_services()))
+        self.assertEqual(3, len(self.service_container.get_services()))
         mock_list_containers.assert_called_once()
         self.assertEqual(3, mock_get_container_from_id.call_count)
         self.assertEqual(3, mock_get_node_name.call_count)

@@ -3,19 +3,19 @@ from mock import patch
 from zope.interface.verify import verifyObject
 
 
-from docker_adapters.base import SwarmAdapter
-from service.base import ServiceInterface
-from service.swarmservice import SwarmService as SwarmServiceAdapter
-from utils.test_utilities import SwarmNode, SwarmService
-from models import Node, Service
+from discovery import SwarmAdapter
+from discovery.layers.service import ServiceInterface
+from discovery.layers.service import SwarmService as SwarmServiceAdapter
+from discovery import SwarmNode, SwarmService
+from discovery import Node, Service
 
 
 class TestSwarmService(unittest.TestCase):
     def setUp(self):
-        self.swarmservice_adapter = SwarmServiceAdapter()
+        self.service_swarm = SwarmServiceAdapter()
 
     def test_service_interface_implementation(self):
-        self.assertEqual(True, verifyObject(ServiceInterface, self.swarmservice_adapter))
+        self.assertEqual(True, verifyObject(ServiceInterface, self.service_swarm))
 
     @patch.object(SwarmAdapter, 'is_manager', return_value=True)
     @patch.object(
@@ -41,7 +41,7 @@ class TestSwarmService(unittest.TestCase):
         self, mock_get_services_object,
         mock_get_swarm_services, mock_is_manager
     ):
-        services = self.swarmservice_adapter.get_services()
+        services = self.service_swarm.get_services()
         mock_is_manager.assert_called_once()
         mock_get_swarm_services.assert_called_once()
         mock_get_services_object.assert_called_once()
@@ -56,7 +56,7 @@ class TestSwarmService(unittest.TestCase):
         self, mock_get_services_object,
         mock_get_swarm_services, mock_is_manager
     ):
-        services = self.swarmservice_adapter.get_services()
+        services = self.service_swarm.get_services()
         mock_is_manager.assert_called_once()
         mock_get_swarm_services.assert_not_called()
         mock_get_services_object.assert_not_called()
@@ -93,7 +93,7 @@ class TestSwarmService(unittest.TestCase):
             service_id='r1neuke2qg59ivhdblg4dvi7h',
             attrs={'Spec': {'Name': 'hello'}}
         )
-        services = self.swarmservice_adapter._get_services_object(service)
+        services = self.service_swarm._get_services_object(service)
         self.assertEqual(1, len(services))
         self.assertEqual('hello', services[0].name)
         self.assertEqual(3, len(services[0].nodes))
@@ -118,7 +118,7 @@ class TestSwarmService(unittest.TestCase):
             service_id='r1neuke2qg59ivhdblg4dvi7h',
             attrs={'Spec': {'Name': 'hello'}}
         )
-        services = self.swarmservice_adapter._get_services_object(service)
+        services = self.service_swarm._get_services_object(service)
         self.assertEqual(0, len(services))
         mock_get_service_exposed_ports.assert_called_once()
         mock_get_all_nodes.assert_not_called()
@@ -149,7 +149,7 @@ class TestSwarmService(unittest.TestCase):
             service_id='r1neuke2qg59ivhdblg4dvi7h',
             attrs={'Spec': {'Name': 'hello'}}
         )
-        services = self.swarmservice_adapter._get_services_object(service)
+        services = self.service_swarm._get_services_object(service)
         self.assertEqual(0, len(services))
         mock_get_service_exposed_ports.assert_called_once()
         mock_get_all_nodes.assert_called_once()
@@ -180,7 +180,7 @@ class TestSwarmService(unittest.TestCase):
     def test_get_all_nodes(self, mock_list_nodes):
         self.assertEqual(
             3,
-            len(self.swarmservice_adapter._get_all_nodes())
+            len(self.service_swarm._get_all_nodes())
         )
 
     @patch.object(
@@ -222,7 +222,7 @@ class TestSwarmService(unittest.TestCase):
     def test_get_nodes_running_service(self, mock_list_nodes, mock_get_tasks):
         self.assertEqual(
             1,
-            len(self.swarmservice_adapter._get_nodes_running_service(
+            len(self.service_swarm._get_nodes_running_service(
                 SwarmService(
                     service_id="123456789",
                     attrs={

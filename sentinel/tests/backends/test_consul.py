@@ -2,12 +2,12 @@ import unittest
 from mock import patch
 import requests
 from zope.interface.verify import verifyObject
-from utils.test_utilities import StubResponse
+from discovery import StubResponse
 
-from models import Service, Node
-from backends.backend import Backend
-from backends.consul import Consul
-from docker_adapters.base import DockerAdapter
+from discovery import Service, Node
+from discovery import Backend
+from discovery import Consul
+from discovery import DockerAdapter
 
 
 class TestConsul(unittest.TestCase):

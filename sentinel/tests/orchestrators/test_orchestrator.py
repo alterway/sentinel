@@ -3,7 +3,7 @@ from zope.interface import implementer
 from zope.interface.exceptions import BrokenImplementation
 from zope.interface.verify import verifyObject
 
-from orchestrators.orchestrator import Orchestrator
+from discovery import Orchestrator
 
 
 class TestOrchestrator(unittest.TestCase):

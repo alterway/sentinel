@@ -3,7 +3,7 @@ from zope.interface.exceptions import BrokenImplementation
 from zope.interface.verify import verifyObject
 import unittest
 
-from backends.backend import Backend
+from discovery import Backend
 
 
 class TestBackend(unittest.TestCase):

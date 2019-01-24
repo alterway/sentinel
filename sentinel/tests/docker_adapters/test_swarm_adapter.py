@@ -1,5 +1,5 @@
-from docker_adapters.base import SwarmAdapter
-from utils.test_utilities import SwarmService, SwarmNode, StubDockerSocket
+from discovery import SwarmAdapter
+from discovery import SwarmService, SwarmNode, StubDockerSocket
 from mock import patch
 import unittest
 

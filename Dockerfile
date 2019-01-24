@@ -1,13 +1,14 @@
-FROM python:3.6-alpine
+FROM python:3.7-alpine
 
 WORKDIR /opt
 
-COPY sentinel sentinel
-COPY setup.py setup.py
+RUN apk --update add curl bash
 
-RUN pip install -e . 
+COPY sentinel sentinel
+
+RUN pip install -e sentinel/
 
 ENV BACKEND="consul" \
     ORCHESTRATOR="swarm"
 
-ENTRYPOINT ["python", "/opt/sentinel"]
+ENTRYPOINT ["sentinel"]
