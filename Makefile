@@ -16,7 +16,7 @@ tag: install-semver
 	@sed -i -r "s/version='([0-9]+\.[0-9]+\.[0-9]+)/version='`semver tag`/g" sentinel/setup.py
 	@sed -i -r "s/version='v/version='/g" sentinel/setup.py
 	@sed -i -r "s/sentinel:([0-9]+\.[0-9]+\.[0-9]+)/sentinel:`semver tag`/g" README.md
-	@sed -i -r "s/sentinel:v/sentinel:'/g" README.md
+	@sed -i -r "s/sentinel:v/sentinel:/g" README.md
 
 build-sentinel:
 	docker build -t ${REGISTRY}/sentinel:`semver tag` .
