@@ -15,41 +15,59 @@ He need to have access to the docker socket of the node and to the consul. You c
 
 **Docker-compose example :**
 ```yaml
-version: "3"
+version: "2.1"
+
+volumes:
+  consul-data:
+    driver: local
 
 services:
   consul:
-    container_name: consul
     image: consul
-    command: agent -server -bootstrap-expect 1 -domain vagrant.dev --advertise 192.168.50.4 -node=node1 -datacenter cluster --client=0.0.0.0 -recursor 8.8.8.8 -ui
-    restart: always
+    command: agent -server -bootstrap-expect 1 -advertise 192.168.50.4 -domain alterway.fr -node=node1 -datacenter clusterdatacenter --client=0.0.0.0 -recursor 8.8.8.8 -ui -log-level INFO -encrypt be1StVCQqo2gPVss12zy4e==
     network_mode: host
+    restart: always
+    ports:
+      - 8500
+    environment:
+      TERM: "xterm"
+      SERVICE_8500_NAME: consul
     volumes:
-      - consul-data:/consul/data
+      - consul-data:/consul/data/
 
-  sentinel:
-    container_name: sentinel
-    image: alterway/sentinel
-    restart: always
+  registrator:
+    image: alterway/sentinel:'2.0.2
+    command: --log-level=DEBUG discovery --target=127.0.0.1:8500 --backend=consul --orchestrator=swarm
     network_mode: host
+    restart: always
+    environment:
+      TERM: "xterm"
     volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-    - consul
+      - /var/run/docker.sock:/var/run/docker.sock
 ```
 
-**Environment variables to configure sentinel :**
-* `BACKEND` : (default: consul), to configure the backend to register services, only consul for now.
-* `ORCHESTRATOR` : (default: swarm), to configure the cluster docker orchestrator, only swarm for now.
-* `CONSUL_ADDRESS`: (default: http://127.0.0.1:8500), the address to get consul catalog. You need to have an consul agent on all nodes because the address agent is the node cluster address to register services.
-* `DEBUG`: Add this to have debug logs level.
+**USe sentinel command to launch discovery service :**
+```sh
+docker run -it --rm -v /tmp/config:/config alterway/sentinel:'2.0.2 \
+    --log-level=DEBUG \
+    discovery \
+    --target=127.0.0.1:8500 \
+    --backend=consul \
+    --orchestrator=swarm
+```
+
+* `backend` : (default: consul), to configure the backend to register services, only consul for now.
+* `orchestrator` : (default: swarm), to configure the cluster docker orchestrator, only swarm for now.
+* `target`: (default: http://127.0.0.1:8500), the address to get consul catalog. You need to have an consul agent on all nodes because the address agent is the node cluster address to register services.
+* `log-level`: Add this to have debug logs level.
 
 **Use sentinel command to generate docker-compose files:**
 You can use command `create_config` to generate docker-compose files with consul and sentinel services.
 The files are writed in directory /config.
 To run help command :
-```
-docker run -it --rm -v /tmp/config:/config alterway/sentinel create_config --help
+
+```sh
+docker run -it --rm -v /tmp/config:/config alterway/sentinel:'2.0.2 --log-level=DEBUG create_config --help
 ```
 If you choose deployment-type swarmservices, you have to use command `docker stack deploy`to deploy, use `docker-compose` on each node if you choose compose.
 
@@ -76,3 +94,12 @@ Sometimes swarm api give node address 0.0.0.0 and the record for this node in co
   * you need to rebuild and up sentinel inside vagrant VM to aply changement in code
   * you have to write unit tests in "tests" directory of project
   * to run tests : `make quality`
+
+## Contributors
+
+- [Ophélie Mauger](https://github.com/omauger)
+- [Etienne de Longeaux](https://github.com/alhassane)
+
+## License
+
+View [LICENSE](LICENSE) for the software contained in this image.

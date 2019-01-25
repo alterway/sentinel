@@ -1,4 +1,4 @@
-from service.base import ServiceBase
+from discovery.layers.service import ServiceBase
 import unittest
 
 

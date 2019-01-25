@@ -1,5 +1,5 @@
-from docker_adapters.base import DockerAdapter
-from utils.test_utilities import Container, StubDockerSocket
+from discovery import DockerAdapter
+from discovery import Container, StubDockerSocket
 from mock import patch
 import unittest
 

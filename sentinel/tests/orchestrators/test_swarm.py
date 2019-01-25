@@ -2,13 +2,13 @@ from zope.interface.verify import verifyObject
 from mock import patch
 import unittest
 
-from orchestrators.orchestrator import Orchestrator
-from orchestrators.swarm import Swarm
-from docker_adapters.base import SwarmAdapter
-from service.container import Container
-from service.swarmservice import SwarmService
-from backends.consul import Consul
-from models import Service, Node
+from discovery import Orchestrator
+from discovery import Swarm
+from discovery import SwarmAdapter
+from discovery.layers.service import Container
+from discovery.layers.service import SwarmService
+from discovery import Consul
+from discovery import Service, Node
 
 
 class TestSwarm(unittest.TestCase):

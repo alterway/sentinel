@@ -1,5 +1,5 @@
 from unittest import TestCase
-from commands.create_config import ConfigManager
+from discovery.layers.commands import ConfigManager
 import os
 
 
