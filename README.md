@@ -36,7 +36,7 @@ services:
       - consul-data:/consul/data/
 
   registrator:
-    image: alterway/sentinel:'2.0.2
+    image: alterway/sentinel:2.0.2
     command: --log-level=DEBUG discovery --target=127.0.0.1:8500 --backend=consul --orchestrator=swarm
     network_mode: host
     restart: always
@@ -48,7 +48,7 @@ services:
 
 **USe sentinel command to launch discovery service :**
 ```sh
-docker run -it --rm -v /tmp/config:/config alterway/sentinel:'2.0.2 \
+docker run -it --rm -v /tmp/config:/config alterway/sentinel:2.0.2 \
     --log-level=DEBUG \
     discovery \
     --target=127.0.0.1:8500 \
@@ -67,7 +67,7 @@ The files are writed in directory /config.
 To run help command :
 
 ```sh
-docker run -it --rm -v /tmp/config:/config alterway/sentinel:'2.0.2 --log-level=DEBUG create_config --help
+docker run -it --rm -v /tmp/config:/config alterway/sentinel:2.0.2 --log-level=DEBUG create_config --help
 ```
 If you choose deployment-type swarmservices, you have to use command `docker stack deploy`to deploy, use `docker-compose` on each node if you choose compose.
 
