@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='sentinel',
-    version='2.0.2',
+    version='2.0.3',
     description='Python project to register container docker as service in a backend',
     author='Ophélie Mauger, Etienne de Longeaux',
     author_email='ophelie.mauger@alterway.fr, etienne.de-longeaux@alterway.fr',
@@ -19,7 +19,7 @@ setup(
         "docker==3.6.*",
         "requests==2.20.*",
         "python-consul==1.1.0",
-        "jinja2==2.10.*",
+        "jinja2>=2.10.1",
         "zope.interface==4.5.*",
         "ddd-domain-driven-design==0.0.2"
     ],
