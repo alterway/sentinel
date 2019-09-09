@@ -1,5 +1,5 @@
-export REGISTRY ?=registry.gitlab.com
-export RELEASE_REMOTE ?=pigroupe
+export REGISTRY ?=hub.alterway.fr/sentinel
+export RELEASE_REMOTE ?=origin
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' Makefile | awk 'BEGIN {FS = ":.*?## "}; {printf ($$1 ~ "--" ? $$2 "\n" : "\033[36m%-10s \033[34m%s\033[0m\n", $$1,  $$2)}'
@@ -25,8 +25,8 @@ tag: install-semver
 
 build-sentinel: ## Build docker image of last version of sentinel and push it in the ${REGISTRY} registry
 build-sentinel:
-	docker build -t ${REGISTRY}/pi-microservice/sentinel:`semver tag` .
-	(docker push ${REGISTRY}/pi-microservice/sentinel:`semver tag`) || true
+	docker build -t ${REGISTRY}:`semver tag` .
+	(docker push ${REGISTRY}:`semver tag`) || true
 
 release: ## Tag git with last release
 release:
